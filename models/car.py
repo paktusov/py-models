@@ -14,7 +14,7 @@ from models.car_event import CarEventType, CarEvent
 from models.insurance import CarInsurance
 from models.transaction import Transaction
 from models.turo_reservation import TuroReservation
-from config import S3_CDN_ENDPOINT, S3_ENDPOINT
+from models.config import S3_CDN_ENDPOINT, S3_ENDPOINT
 
 CAR_STATUS_PENDING = 0
 CAR_STATUS_ACTIVE = 1

@@ -9,7 +9,7 @@ from sqlalchemy.orm import relationship
 from models import base
 from models.fleet_log import FleetLog
 from models.manager import Manager
-from ..config import ORDER_LIMIT_EXPIRE_MIN
+from models.config import ORDER_LIMIT_EXPIRE_MIN
 
 ORDER_STATUS_NEW = 0
 ORDER_STATUS_PAID = 1

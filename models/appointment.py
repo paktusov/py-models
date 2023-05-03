@@ -3,7 +3,7 @@ import enum
 from sqlalchemy import Enum, Column, Integer, DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import synonym, relationship
 
-from config import HOST_URL_ADM
+from models.config import HOST_URL_ADM
 from models import base
 
 
