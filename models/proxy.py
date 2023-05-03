@@ -16,3 +16,6 @@ class Proxy(base):
     1 - working
     6 - error
     """
+
+    def test(self):
+        return self.address
