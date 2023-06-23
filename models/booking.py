@@ -7,8 +7,6 @@ from sqlalchemy import or_, Enum, Column, Integer, DateTime, String, ForeignKey,
 from sqlalchemy.orm import relationship
 
 from . import base
-from .fleet_log import FleetLog
-from .manager import Manager
 
 ORDER_STATUS_NEW = 0
 ORDER_STATUS_PAID = 1
@@ -201,8 +199,8 @@ class Booking(base):
     #     session.add(reservation)
     #     session.commit()
 
-    def last_comment(self):
-        return FleetLog.query.filter_by(target=self.id, item="reservation", action="comment").order_by(FleetLog.created.desc()).first()
+    # def last_comment(self):
+    #     return FleetLog.query.filter_by(target=self.id, item="reservation", action="comment").order_by(FleetLog.created.desc()).first()
 
     # def last_comment_formatted(self):
     #     c = self.last_comment()
@@ -224,10 +222,10 @@ class Booking(base):
     #         seconds_left = 0
     #     return seconds_left
 
-    def get_manager(self):
-        if not self.manager_id:
-            return None
-        return Manager.query.filter_by(id=self.manager_id).first()
+    # def get_manager(self):
+    #     if not self.manager_id:
+    #         return None
+    #     return Manager.query.filter_by(id=self.manager_id).first()
 
     def is_cancelation_free(self):
         """
@@ -315,7 +313,7 @@ class Booking(base):
         return days
 
     def days(self):
-        return Booking.calc_days(start=self.date_checkin, finish=self.date_checkout)
+        return self.calc_days(start=self.date_checkin, finish=self.date_checkout)
 
     def insurance_price_day_usd(self):
         days = self.days()

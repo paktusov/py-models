@@ -2,15 +2,12 @@ import enum
 from datetime import datetime
 from functools import cached_property
 
-from sqlalchemy import Enum, text, Column, Integer, DateTime, String, ForeignKey, Boolean, Text
+from sqlalchemy import Enum, Column, Integer, DateTime, String, ForeignKey, Boolean, Text
 import math
 
 from sqlalchemy.orm import relationship
 
 from . import base
-from .booking import OrderPhoto
-from .car_fuel import CarFuel, FuelSourceType
-from .car_odometer import OdometerSourceType, CarOdometer
 
 
 class ReservationStatus(enum.Enum):
@@ -81,21 +78,21 @@ class Reservation(base):
             days = 1
         return days
 
-    def odometers(self) -> (int | None, int | None):
-        car_odometer_checkin = CarOdometer.query.filter(
-            CarOdometer.car_id == self.car.id,
-            CarOdometer.source_uuid == self.uuid,
-            CarOdometer.source_type == OdometerSourceType.checkin
-        ).first()
-
-        if car_odometer_checkin:
-            car_odometer_checkout = CarOdometer.query.filter(
-                CarOdometer.car_id == self.car.id,
-                CarOdometer.source_uuid == self.uuid,
-                CarOdometer.source_type == OdometerSourceType.checkout
-            ).first()
-
-            return getattr(car_odometer_checkin, 'odometer', None), getattr(car_odometer_checkout, 'odometer', None)
+    # def odometers(self) -> (int | None, int | None):
+    #     car_odometer_checkin = CarOdometer.query.filter(
+    #         CarOdometer.car_id == self.car.id,
+    #         CarOdometer.source_uuid == self.uuid,
+    #         CarOdometer.source_type == OdometerSourceType.checkin
+    #     ).first()
+    #
+    #     if car_odometer_checkin:
+    #         car_odometer_checkout = CarOdometer.query.filter(
+    #             CarOdometer.car_id == self.car.id,
+    #             CarOdometer.source_uuid == self.uuid,
+    #             CarOdometer.source_type == OdometerSourceType.checkout
+    #         ).first()
+    #
+    #         return getattr(car_odometer_checkin, 'odometer', None), getattr(car_odometer_checkout, 'odometer', None)
 
     def odometers_old(self) -> (int | None, int | None):
         checkin_odometer, checkout_odometer = None, None
@@ -113,20 +110,20 @@ class Reservation(base):
 
         return checkin_odometer, checkout_odometer
 
-    def fuels(self) -> (int | None, int | None):
-        car_fuel_level_checkin = CarFuel.query.filter(
-            CarFuel.car_id == self.car.id,
-            CarFuel.source_uuid == self.uuid,
-            CarFuel.source_type == FuelSourceType.checkin
-        ).first()
-
-        car_fuel_level_checkout = CarFuel.query.filter(
-            CarFuel.car_id == self.car.id,
-            CarFuel.source_uuid == self.uuid,
-            CarFuel.source_type == FuelSourceType.checkout
-        ).first()
-
-        return getattr(car_fuel_level_checkin, 'fuel_level', None), getattr(car_fuel_level_checkout, 'odometer', None)
+    # def fuels(self) -> (int | None, int | None):
+    #     car_fuel_level_checkin = CarFuel.query.filter(
+    #         CarFuel.car_id == self.car.id,
+    #         CarFuel.source_uuid == self.uuid,
+    #         CarFuel.source_type == FuelSourceType.checkin
+    #     ).first()
+    #
+    #     car_fuel_level_checkout = CarFuel.query.filter(
+    #         CarFuel.car_id == self.car.id,
+    #         CarFuel.source_uuid == self.uuid,
+    #         CarFuel.source_type == FuelSourceType.checkout
+    #     ).first()
+    #
+    #     return getattr(car_fuel_level_checkin, 'fuel_level', None), getattr(car_fuel_level_checkout, 'odometer', None)
 
     def fuels_old(self) -> (int | None, int | None):
         checkin_fuel, checkout_fuel = None, None
@@ -147,17 +144,17 @@ class Reservation(base):
     def days(self) -> int:
         return self.calc_days(start=self.date_checkin, finish=self.date_checkout)
 
-    def get_photos(self, photo_type=None):
-        order_photo_query = OrderPhoto.query.filter(OrderPhoto.order_id == self.id, OrderPhoto.status == 1)
-        if photo_type:
-            order_photo_query = order_photo_query.filter(OrderPhoto.photo_type == photo_type)
-        return order_photo_query.order_by(OrderPhoto.created.desc()).all()
+    # def get_photos(self, photo_type=None):
+    #     order_photo_query = OrderPhoto.query.filter(OrderPhoto.order_id == self.id, OrderPhoto.status == 1)
+    #     if photo_type:
+    #         order_photo_query = order_photo_query.filter(OrderPhoto.photo_type == photo_type)
+    #     return order_photo_query.order_by(OrderPhoto.created.desc()).all()
 
-    def count_photos(self, photo_type):
-        return OrderPhoto.query.filter(
-            OrderPhoto.order_id == self.id,
-            OrderPhoto.status == 1,
-            OrderPhoto.photo_type == photo_type).count()
+    # def count_photos(self, photo_type):
+    #     return OrderPhoto.query.filter(
+    #         OrderPhoto.order_id == self.id,
+    #         OrderPhoto.status == 1,
+    #         OrderPhoto.photo_type == photo_type).count()
 
     def insurance_price_total(self) -> int:
         return self.days() * self.insurance_price
@@ -228,23 +225,6 @@ class Reservation(base):
         if self.deposit_paid:
             amount += self.deposit_amount
         return amount
-
-    @staticmethod
-    def refund_notifications_count():
-        # TODO this is slow, need to cache
-        filter_expr = text('''CASE 
-	        WHEN status = 'canceled' THEN DATE_ADD(updated_at, INTERVAL 7 DAY) < CURRENT_TIMESTAMP 
-	        WHEN status = 'complete' THEN DATE_ADD(date_checkout, INTERVAL 14 DAY) < CURRENT_TIMESTAMP 
-            END''')
-
-        data = Reservation.query.filter(
-            Reservation.status.in_([ReservationStatus.canceled, ReservationStatus.complete]),
-            Reservation.deposit_amount > 0,
-            Reservation.deposit_paid == True,
-            Reservation.deposit_refunded == False,
-            filter_expr
-        ).order_by(Reservation.date_checkout).count()
-        return data
 
     def is_photos_deletable(self):
         if self.status in [ReservationStatus.canceled, ReservationStatus.complete]:

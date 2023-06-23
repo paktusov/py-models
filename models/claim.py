@@ -4,9 +4,6 @@ from sqlalchemy import Column, Integer, DateTime, Enum, Text, ForeignKey
 from sqlalchemy.orm import relationship
 
 from . import base
-from .booking import Booking
-from .damage import CarDamage
-from .turo_reservation import TuroReservation
 
 
 class CarClaimStatus(enum.Enum):
@@ -48,20 +45,20 @@ class CarClaim(base):
     def source(self):
         return self.car.platform
 
-    @property
-    def driver(self):
-        if not self.reservation_type:
-            return '-'
-        elif self.reservation_type == "turo":
-            reservation = TuroReservation.query.filter(TuroReservation.turo_id == self.reservation_id).first()
-            return f'{reservation.driver_main.fullname()} {reservation.driver_main.phone} {reservation.driver_main.email}'
-        else:
-            reservation = Booking.query.filter(Booking.id == self.reservation_id).first()
-            return f'{reservation.client_name} {reservation.client_phone} {reservation.client_email}'
+    # @property
+    # def driver(self):
+    #     if not self.reservation_type:
+    #         return '-'
+    #     elif self.reservation_type == "turo":
+    #         reservation = TuroReservation.query.filter(TuroReservation.turo_id == self.reservation_id).first()
+    #         return f'{reservation.driver_main.fullname()} {reservation.driver_main.phone} {reservation.driver_main.email}'
+    #     else:
+    #         reservation = Booking.query.filter(Booking.id == self.reservation_id).first()
+    #         return f'{reservation.client_name} {reservation.client_phone} {reservation.client_email}'
 
-    @property
-    def damages_list(self):
-        return CarDamage.query.filter(CarDamage.claim_id == self.id).all()
+    # @property
+    # def damages_list(self):
+    #     return CarDamage.query.filter(CarDamage.claim_id == self.id).all()
 
     @property
     def host(self):

@@ -7,7 +7,6 @@ from sqlalchemy import Enum, Column, Integer, DateTime, String, ForeignKey, Bool
 from sqlalchemy.orm import relationship
 
 from . import base
-from .booking import Booking
 
 
 # TODO refactor turo stuff into separate file
@@ -145,7 +144,7 @@ class TuroReservation(base):
         return days
 
     def days(self):
-        return Booking.calc_days(start=self.date_reservation_start, finish=self.date_reservation_end)
+        return self.calc_days(start=self.date_reservation_start, finish=self.date_reservation_end)
 
     @property
     def data_deserialize(self):

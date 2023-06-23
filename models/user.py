@@ -3,9 +3,6 @@ import enum
 from sqlalchemy import Enum, Column, Integer, DateTime, String
 
 from . import base
-from .car import Car
-from .driver import DriverVerification, DriverVerificationStatus
-from .reservation import Reservation
 
 
 class UserVerification(enum.Enum):
@@ -34,15 +31,15 @@ class User(base):
     #     self.uuid = uuid
     #     self.auth_token = auth_token
 
-    def cnt_cars(self):
-        # count all the cars that are not deleted
-        return Car.query.filter_by(user_id=self.id).filter(Car.status != 10).count()
+    # def cnt_cars(self):
+    #     # count all the cars that are not deleted
+    #     return Car.query.filter_by(user_id=self.id).filter(Car.status != 10).count()
 
-    def cnt_trips(self):
-        return Reservation.query.filter(Reservation.user_id == self.id).count()
+    # def cnt_trips(self):
+    #     return Reservation.query.filter(Reservation.user_id == self.id).count()
 
-    def list_cars(self):
-        return Car.query.filter_by(user_id=self.id).filter(Car.status != 10).order_by(Car.created.desc()).all()
+    # def list_cars(self):
+    #     return Car.query.filter_by(user_id=self.id).filter(Car.status != 10).order_by(Car.created.desc()).all()
 
     def list_cars_ids(self):
         cars = self.list_cars()
@@ -51,15 +48,15 @@ class User(base):
             list_ids.append(c.id)
         return list_ids
 
-    @property
-    def pending(self):
-        pending = DriverVerification.query.filter(
-            DriverVerification.user_id == self.id,
-            DriverVerification.status == DriverVerificationStatus.pending,
-        ).order_by(DriverVerification.created_at.desc()).first()
-        if pending:
-            return True
-        return False
+    # @property
+    # def pending(self):
+    #     pending = DriverVerification.query.filter(
+    #         DriverVerification.user_id == self.id,
+    #         DriverVerification.status == DriverVerificationStatus.pending,
+    #     ).order_by(DriverVerification.created_at.desc()).first()
+    #     if pending:
+    #         return True
+    #     return False
 
     def fullname(self):
         if self.name:

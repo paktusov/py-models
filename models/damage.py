@@ -4,7 +4,6 @@ from sqlalchemy import Enum, Column, Integer, ForeignKey, DateTime, String, Text
 from sqlalchemy.orm import relationship
 
 from . import base
-from .car_event import CarEventFile, CarEventType
 
 BODY_PARTS = [
     'Front bumper',
@@ -56,18 +55,18 @@ class CarDamage(base):
     def car_name_plate(self):
         return self.car.car_name_plate()
 
-    @property
-    def photos_count(self):
-        return CarEventFile.query.filter_by(
-            event_type=CarEventType.damage,
-            event_id=self.id,
-            is_active=True
-        ).count()
+    # @property
+    # def photos_count(self):
+    #     return CarEventFile.query.filter_by(
+    #         event_type=CarEventType.damage,
+    #         event_id=self.id,
+    #         is_active=True
+    #     ).count()
 
-    @property
-    def get_photos(self):
-        return CarEventFile.query.filter_by(
-            event_type=CarEventType.damage,
-            event_id=self.id,
-            is_active=True
-        ).all()
+    # @property
+    # def get_photos(self):
+    #     return CarEventFile.query.filter_by(
+    #         event_type=CarEventType.damage,
+    #         event_id=self.id,
+    #         is_active=True
+    #     ).all()
