@@ -1,12 +1,9 @@
 import enum
 
-from sqlalchemy import Column, Integer, DateTime, Enum, Text, ForeignKey
-from sqlalchemy.orm import relationship
-
-from models import base
-from models.booking import Booking
-from models.damage import CarDamage
-from models.turo_reservation import TuroReservation
+from app.db import db
+from app.models.booking import Booking
+from app.models.damage import CarDamage
+from app.models.turo_reservation import TuroReservation
 
 
 class CarClaimStatus(enum.Enum):
@@ -16,29 +13,29 @@ class CarClaimStatus(enum.Enum):
     canceled = "canceled"
 
 
-class CarClaim(base):
+class CarClaim(db.Model):
     __tablename__ = "car_claims"
-    id = Column(Integer, primary_key=True)
-    created = Column(DateTime, nullable=False)
-    updated = Column(DateTime, nullable=False)
-    status = Column(Enum(CarClaimStatus), nullable=False)
-    reservation_type = Column(Text, nullable=True)
-    reservation_id = Column(Integer, nullable=True)
-    car_id = Column(Integer, ForeignKey('cars.id'), nullable=False)
-    car = relationship('Car')
-    manager_id = Column(Integer, ForeignKey('managers.id'), nullable=False)
-    manager = relationship('Manager')
-    comment = Column(Text, nullable=True)
-    body_shop_name = Column(Text, nullable=True)
-    estimate_usd = Column(Integer, nullable=True)  # cents
-    deductible_usd = Column(Integer, nullable=True)  # cents
-    etc_supplement = Column(Text, nullable=True)
-    etc_guest_deductible = Column(Integer, nullable=True)  # cents
-    total_amount_usd = Column(Integer, nullable=True)  # cents
-    etc_iaa = Column(Text, nullable=True)
-    etc_account_balance = Column(Text, nullable=True)  # cents
-    repair_cost_usd = Column(Integer, nullable=True)  # cents
-    etc_main = Column(Text, nullable=True)
+    id = db.Column(db.Integer, primary_key=True)
+    created = db.Column(db.DateTime, nullable=False)
+    updated = db.Column(db.DateTime, nullable=False)
+    status = db.Column(db.Enum(CarClaimStatus), nullable=False)
+    reservation_type = db.Column(db.Text, nullable=True)
+    reservation_id = db.Column(db.Text, nullable=True)
+    car_id = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
+    car = db.relationship('Car')
+    manager_id = db.Column(db.Integer, db.ForeignKey('managers.id'), nullable=False)
+    manager = db.relationship('Manager')
+    comment = db.Column(db.Text, nullable=True)
+    body_shop_name = db.Column(db.Text, nullable=True)
+    estimate_usd = db.Column(db.Integer, nullable=True)  # cents
+    deductible_usd = db.Column(db.Integer, nullable=True)  # cents
+    etc_supplement = db.Column(db.Text, nullable=True)
+    etc_guest_deductible = db.Column(db.Integer, nullable=True)  # cents
+    total_amount_usd = db.Column(db.Integer, nullable=True)  # cents
+    etc_iaa = db.Column(db.Text, nullable=True)
+    etc_account_balance = db.Column(db.Text, nullable=True)  # cents
+    repair_cost_usd = db.Column(db.Integer, nullable=True)  # cents
+    etc_main = db.Column(db.Text, nullable=True)
 
     @property
     def car_name_plate(self):

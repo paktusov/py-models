@@ -1,9 +1,8 @@
 import enum
 
-from sqlalchemy import Enum, Column, Integer, DateTime, String, ForeignKey, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy import Enum
 
-from models import base
+from app.db import db
 
 
 class DriverApprovedToDrive(enum.Enum):
@@ -11,17 +10,17 @@ class DriverApprovedToDrive(enum.Enum):
     not_approved = "not approved"
 
 
-class Driver(base):
+class Driver(db.Model):
     __tablename__ = "drivers"
-    id = Column(Integer, primary_key=True)
-    created_at = Column(DateTime, nullable=False)
-    updated_at = Column(DateTime)
-    phone = Column(String(150), unique=True, nullable=False)
-    email = Column(String(128), nullable=True)
-    uuid = Column(String(64), nullable=False)
-    auth_token_refresh = Column(String(256), nullable=True)
-    approved_to_drive = Column(Enum(DriverApprovedToDrive), nullable=False)
-    name = Column(String(50), nullable=True)
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, nullable=False)
+    updated_at = db.Column(db.DateTime)
+    phone = db.Column(db.String(150), unique=True, nullable=False)
+    email = db.Column(db.String(128), nullable=True)
+    uuid = db.Column(db.String(64), nullable=False)
+    auth_token_refresh = db.Column(db.String(256), nullable=True)
+    approved_to_drive = db.Column(Enum(DriverApprovedToDrive), nullable=False)
+    name = db.Column(db.String(50), nullable=True)
 
     @property
     def pending(self):
@@ -38,6 +37,14 @@ class Driver(base):
             return f'{self.name}'
         return '-'
 
+    def full_description(self):
+        description = [self.phone]
+        if self.name:
+            description.append(self.name)
+        if self.email:
+            description.append(self.email)
+        return " - ".join(description)
+
     @staticmethod
     def get_by_phone(phone):
         return Driver.query.filter_by(phone=phone).first()
@@ -49,19 +56,21 @@ class DriverVerificationStatus(enum.Enum):
     declined = "declined"
 
 
-class DriverVerification(base):
+class DriverVerification(db.Model):
     __tablename__ = "driver_verifications"
-    id = Column(Integer, primary_key=True)
-    created_at = Column(DateTime, nullable=False)
-    updated_at = Column(DateTime)
-    status = Column(Enum(DriverVerificationStatus), nullable=False)
-    name = Column(String(128), nullable=True)
-    email = Column(String(150), nullable=True)
-    photo_selfie = Column(String(128), nullable=False)
-    photo_license = Column(String(128), nullable=False)
-    photo_license_back = Column(String(128), nullable=False)
-    decline_comment = Column(Text)
-    driver_id = Column(Integer, ForeignKey('drivers.id'), nullable=False)
-    driver = relationship('Driver')
-    manager_id = Column(Integer, ForeignKey('managers.id'))
-    manager = relationship('Manager')
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, nullable=False)
+    updated_at = db.Column(db.DateTime)
+    status = db.Column(db.Enum(DriverVerificationStatus), nullable=False)
+    name = db.Column(db.String(128), nullable=True)
+    email = db.Column(db.String(150), nullable=True)
+    photo_selfie = db.Column(db.String(128), nullable=False)
+    photo_license = db.Column(db.String(128), nullable=False)
+    photo_license_back = db.Column(db.String(128), nullable=False)
+    decline_comment = db.Column(db.Text)
+    driver_id = db.Column(db.Integer, db.ForeignKey('drivers.id'), nullable=False)
+    driver = db.relationship('Driver')
+    manager_id = db.Column(db.Integer, db.ForeignKey('managers.id'))
+    manager = db.relationship('Manager')
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user = db.relationship('User')

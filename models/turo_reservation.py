@@ -1,23 +1,23 @@
 import enum
 import json
 import math
+from functools import cached_property
 
-from sqlalchemy import Enum, Column, Integer, DateTime, String, ForeignKey, Boolean, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy import Enum
 
-from models import base
-from models.booking import Booking
+from app.db import db
+from app.models.booking import Booking
 
 
 # TODO refactor turo stuff into separate file
-class TuroChat(base):
+class TuroChat(db.Model):
     __tablename__ = "turo_chat"
-    id = Column(Integer, primary_key=True)
-    created = Column(DateTime, nullable=False)
-    posted = Column(DateTime, nullable=False)
-    author = Column(Integer, nullable=False)
-    text = Column(String(150), nullable=False)
-    booking_id = Column(Integer, nullable=True)
+    id = db.Column(db.Integer, primary_key=True)
+    created = db.Column(db.DateTime, nullable=False)
+    posted = db.Column(db.DateTime, nullable=False)
+    author = db.Column(db.Integer, nullable=False)
+    text = db.Column(db.String(150), nullable=False)
+    booking_id = db.Column(db.Integer, nullable=True)
 
 
 class TuroReceiptType(enum.Enum):
@@ -26,15 +26,15 @@ class TuroReceiptType(enum.Enum):
     income = 2
 
 
-class TuroReceipt(base):
+class TuroReceipt(db.Model):
     __tablename__ = "turo_receipts"
-    id = Column(Integer, primary_key=True)
-    created = Column(DateTime, nullable=False)
-    receipt_type = Column(Enum(TuroReceiptType), nullable=False)
-    amount_cents = Column(Integer, nullable=False)
-    label = Column(String(150), nullable=False)
-    description = Column(String(150), nullable=True)
-    reservation_id = Column(Integer, nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    created = db.Column(db.DateTime, nullable=False)
+    receipt_type = db.Column(Enum(TuroReceiptType), nullable=False)
+    amount_cents = db.Column(db.Integer, nullable=False)
+    label = db.Column(db.String(150), nullable=False)
+    description = db.Column(db.String(150), nullable=True)
+    reservation_id = db.Column(db.Integer, nullable=False)
 
     def amount_usd(self):
         return self.amount_cents / 100.0
@@ -46,19 +46,19 @@ class TuroReceipt(base):
         return TuroReceiptType.income
 
 
-class TuroDriver(base):
+class TuroDriver(db.Model):
     __tablename__ = "turo_drivers"
-    id = Column(Integer, primary_key=True)
-    created = Column(DateTime, nullable=False)
-    updated = Column(DateTime)
-    first_name = Column(String(150), nullable=False)
-    last_name = Column(String(150), nullable=False)
-    photo_url = Column(String(150), nullable=True)
-    email = Column(String(128), nullable=True)
-    phone = Column(String(32), nullable=True)
-    approval_status = Column(String(150), nullable=True)
-    turo_driver_id = Column(Integer, nullable=False)
-    url = Column(String(150), nullable=True)
+    id = db.Column(db.Integer, primary_key=True)
+    created = db.Column(db.DateTime, nullable=False)
+    updated = db.Column(db.DateTime)
+    first_name = db.Column(db.String(150), nullable=False)
+    last_name = db.Column(db.String(150), nullable=False)
+    photo_url = db.Column(db.String(150), nullable=True)
+    email = db.Column(db.String(128), nullable=True)
+    phone = db.Column(db.String(32), nullable=True)
+    approval_status = db.Column(db.String(150), nullable=True)
+    turo_driver_id = db.Column(db.Integer, nullable=False)
+    url = db.Column(db.String(150), nullable=True)
 
     def fullname(self):
         return f'{self.first_name.capitalize()} {self.last_name.capitalize()}'
@@ -79,40 +79,40 @@ class TuroReservationStatus(enum.Enum):
     completed = 3
 
 
-class TuroReservation(base):
+class TuroReservation(db.Model):
     __tablename__ = "turo_reservations"
-    id = Column(Integer, primary_key=True)
-    created = Column(DateTime, nullable=False)
-    updated = Column(DateTime)
-    turo_id = Column(Integer, nullable=False, unique=True)
-    car_id = Column(Integer, ForeignKey('cars.id'), nullable=False)
-    # car_id = Column(Integer, nullable=False)
-    car = relationship('Car')
-    # status = Column(Enum(TuroReservationStatus), nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    created = db.Column(db.DateTime, nullable=False)
+    updated = db.Column(db.DateTime)
+    turo_id = db.Column(db.Integer, nullable=False, unique=True)
+    car_id = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
+    # car_id = db.Column(db.Integer, nullable=False)
+    car = db.relationship('Car')
+    # status = db.Column(Enum(TuroReservationStatus), nullable=False)
     # COMPLETED, CANCELLED | BOOKED
-    status_str = Column(String(32), nullable=False)
+    status_str = db.Column(db.String(32), nullable=False)
     # drivers
-    driver_main_id = Column(Integer, ForeignKey('turo_drivers.id'), nullable=False)
-    # driver_main_id = Column(Integer, nullable=False)
-    driver_main = relationship('TuroDriver')
-    # driver_additional_id = Column(Integer, ForeignKey('turo_drivers.id'), nullable=True)
-    # driver_additional = relationship('TuroDriver')
+    driver_main_id = db.Column(db.Integer, db.ForeignKey('turo_drivers.id'), nullable=False)
+    # driver_main_id = db.Column(db.Integer, nullable=False)
+    driver_main = db.relationship('TuroDriver')
+    # driver_additional_id = db.Column(db.Integer, db.ForeignKey('turo_drivers.id'), nullable=True)
+    # driver_additional = db.relationship('TuroDriver')
     # dates
-    date_reservation_end = Column(DateTime)
-    date_reservation_start = Column(DateTime)
-    date_turo_created = Column(DateTime)
-    date_trip_end = Column(DateTime)
-    date_trip_start = Column(DateTime)
+    date_reservation_end = db.Column(db.DateTime)
+    date_reservation_start = db.Column(db.DateTime)
+    date_turo_created = db.Column(db.DateTime)
+    date_trip_end = db.Column(db.DateTime)
+    date_trip_start = db.Column(db.DateTime)
     # odometer
-    check_in_mi = Column(Integer)
-    check_out_mi = Column(Integer)
-    distance_limit_mi = Column(Integer)
-    distance_mi = Column(Integer)
-    excess_distance_mi = Column(Integer)
-    is_unlimited_mi = Column(Boolean)
-    latest_odometer_mi = Column(Integer)
-    city = Column(String(12))
-    raw_json = Column(Text)
+    check_in_mi = db.Column(db.Integer)
+    check_out_mi = db.Column(db.Integer)
+    distance_limit_mi = db.Column(db.Integer)
+    distance_mi = db.Column(db.Integer)
+    excess_distance_mi = db.Column(db.Integer)
+    is_unlimited_mi = db.Column(db.Boolean)
+    latest_odometer_mi = db.Column(db.Integer)
+    city = db.Column(db.String(12))
+    raw_json = db.Column(db.Text)
 
     @staticmethod
     def get_turo_reservations_select():
@@ -154,6 +154,6 @@ class TuroReservation(base):
     def delivered(self):
         return not self.data_deserialize['location']['addressLines'][0] == '129 East Washington Boulevard'
 
-    @property
+    @cached_property
     def information(self):
         return f"#{self.turo_id} Car: {self.car.car_name_plate()} Client: {self.driver_main.fullname()}"

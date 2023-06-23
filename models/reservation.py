@@ -1,20 +1,25 @@
 import enum
+import logging
+from datetime import datetime, timedelta
+from functools import cached_property
 
-from sqlalchemy import Enum, Column, Integer, DateTime, String, ForeignKey, Boolean, Text
+from sqlalchemy import Enum, case, literal, func, text
 import math
 
-from sqlalchemy.orm import relationship
-
-from models import base
-from models.booking import OrderPhoto
+from app.db import db
+from app.models.booking import OrderPhoto
+from app.models.car_event import CarEvent, CarEventType
+from app.models.car_fuel import CarFuel, FuelSourceType
+from app.models.car_odometer import OdometerSourceType, CarOdometer
 
 
 class ReservationStatus(enum.Enum):
     new = 'new'
     paid = 'paid'
-    canceled = 'canceled'
+    in_trip = 'in trip'
     expired = 'expired'
     complete = 'complete'
+    canceled = 'canceled'
     undefined = 'undefined'
 
 
@@ -33,35 +38,38 @@ class ReservationMileageType(enum.Enum):
     unlimited = 'unlimited'
 
 
-class Reservation(base):
+class Reservation(db.Model):
     __tablename__ = "reservations"
-    id = Column(Integer, primary_key=True)
-    created_at = Column(DateTime, nullable=False)
-    updated_at = Column(DateTime)
-    uuid = Column(String(130), nullable=False)
-    status = Column(Enum(ReservationStatus), default=ReservationStatus.new, nullable=False)
-    driver_id = Column(Integer, ForeignKey('drivers.id'), nullable=False)
-    driver = relationship('Driver')
-    car_id = Column(Integer, ForeignKey('cars.id'), nullable=False)
-    car = relationship('Car')
-    date_checkin = Column(DateTime, nullable=False)
-    date_checkout = Column(DateTime, nullable=False)
-    in_trip = Column(Boolean(), nullable=False)
-    insurance_type = Column(Enum(ReservationInsuranceType), nullable=False)
-    insurance_price = Column(Integer, nullable=False)
-    delivery_type = Column(Enum(ReservationDeliveryType), nullable=False)
-    delivery_price = Column(Integer, nullable=False)
-    delivery_address = Column(Text)
-    deposit_amount = Column(Integer, nullable=False)
-    deposit_paid = Column(Boolean(), nullable=False)
-    mileage_type = Column(Enum(ReservationMileageType), nullable=False)
-    mileage_unlimited_price = Column(Integer, nullable=False)
-    mileage_limited_included = Column(Integer, nullable=False)
-    mileage_limited_price = Column(Integer, nullable=False)
-    promo_code = Column(String(32))
-    promo_code_discount = Column(Integer)
-    car_price = Column(Integer, nullable=False)
-    trip_fee_price = Column(Integer)
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, nullable=False)
+    updated_at = db.Column(db.DateTime)
+    uuid = db.Column(db.String(130), nullable=False)
+    status = db.Column(Enum(ReservationStatus), default=ReservationStatus.new, nullable=False)
+    driver_id = db.Column(db.Integer, db.ForeignKey('drivers.id'), nullable=False)
+    # driver = db.relationship('Driver')
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    # user = db.relationship('User')
+    car_id = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
+    car = db.relationship('Car')
+    date_checkin = db.Column(db.DateTime, nullable=False)
+    date_checkout = db.Column(db.DateTime, nullable=False)
+    in_trip = db.Column(db.Boolean(), nullable=False)
+    insurance_type = db.Column(Enum(ReservationInsuranceType), nullable=False)
+    insurance_price = db.Column(db.Integer, nullable=False)
+    delivery_type = db.Column(Enum(ReservationDeliveryType), nullable=False)
+    delivery_price = db.Column(db.Integer, nullable=False)
+    delivery_address = db.Column(db.Text)
+    deposit_amount = db.Column(db.Integer, nullable=False)
+    deposit_paid = db.Column(db.Boolean(), nullable=False)
+    deposit_refunded = db.Column(db.Boolean(), nullable=False)
+    mileage_type = db.Column(Enum(ReservationMileageType), nullable=False)
+    mileage_unlimited_price = db.Column(db.Integer, nullable=False)
+    mileage_limited_included = db.Column(db.Integer, nullable=False)
+    mileage_limited_price = db.Column(db.Integer, nullable=False)
+    promo_code = db.Column(db.String(32))
+    promo_code_discount = db.Column(db.Integer)
+    car_price = db.Column(db.Integer, nullable=False)
+    trip_fee_price = db.Column(db.Integer)
 
     @staticmethod
     def calc_days(start, finish) -> int:
@@ -73,9 +81,25 @@ class Reservation(base):
             days = 1
         return days
 
-    def odometers(self) -> (int, int):
+    def odometers(self) -> (int | None, int | None):
+        car_odometer_checkin = CarOdometer.query.filter(
+            CarOdometer.car_id == self.car.id,
+            CarOdometer.source_uuid == self.uuid,
+            CarOdometer.source_type == OdometerSourceType.checkin
+        ).first()
+
+        if car_odometer_checkin:
+            car_odometer_checkout = CarOdometer.query.filter(
+                CarOdometer.car_id == self.car.id,
+                CarOdometer.source_uuid == self.uuid,
+                CarOdometer.source_type == OdometerSourceType.checkout
+            ).first()
+
+            return getattr(car_odometer_checkin, 'odometer', None), getattr(car_odometer_checkout, 'odometer', None)
+
+    def odometers_old(self) -> (int | None, int | None):
+        checkin_odometer, checkout_odometer = None, None
         car_odometers = self.car.odometer_list
-        checkin_odometer, checkout_odometer = 0, 0
         for odometer in car_odometers:
             data = odometer.data_deserialize
             if data.get('id') != self.id:
@@ -89,9 +113,24 @@ class Reservation(base):
 
         return checkin_odometer, checkout_odometer
 
-    def fuels(self) -> (int, int):
+    def fuels(self) -> (int | None, int | None):
+        car_fuel_level_checkin = CarFuel.query.filter(
+            CarFuel.car_id == self.car.id,
+            CarFuel.source_uuid == self.uuid,
+            CarFuel.source_type == FuelSourceType.checkin
+        ).first()
+
+        car_fuel_level_checkout = CarFuel.query.filter(
+            CarFuel.car_id == self.car.id,
+            CarFuel.source_uuid == self.uuid,
+            CarFuel.source_type == FuelSourceType.checkout
+        ).first()
+
+        return getattr(car_fuel_level_checkin, 'fuel_level', None), getattr(car_fuel_level_checkout, 'odometer', None)
+
+    def fuels_old(self) -> (int | None, int | None):
+        checkin_fuel, checkout_fuel = None, None
         car_fuels = self.car.fuel_list
-        checkin_fuel, checkout_fuel = 0, 0
         for fuel in car_fuels:
             data = fuel.data_deserialize
             if data.get('id') != self.id:
@@ -146,13 +185,11 @@ class Reservation(base):
         return self.days() * self.trip_fee_price()
 
     def car_price_discount_total(self) -> int:
-        if 2 <= self.days() <= 3:
-            percents = 0.05
-        elif 4 <= self.days() <= 7:
-            percents = 0.1
-        elif 8 <= self.days() <= 30:
+        if 3 <= self.days() <= 6:
             percents = 0.2
-        elif self.days() > 30:
+        elif 7 <= self.days() <= 29:
+            percents = 0.22
+        elif self.days() >= 30:
             percents = 0.3
         else:
             return 0
@@ -162,8 +199,13 @@ class Reservation(base):
     def mileage_unlimited_price_total(self) -> int:
         return self.mileage_unlimited_price * self.days()
 
+    def total_promo_code_discount(self):
+        if not self.promo_code_discount:
+            return 0
+        return self.car_price_total() * (self.promo_code_discount / 100)
+
     def total_price(self) -> int:
-        total_price = self.car_price_total() + self.trip_fee_price_total() \
+        total_price = self.car_price_total() + self.trip_fee_price_total() - self.total_promo_code_discount() \
                       + self.insurance_price_total() - self.car_price_discount_total()
         if self.mileage_type.name == "unlimited":
             total_price += self.mileage_unlimited_price_total()
@@ -171,6 +213,49 @@ class Reservation(base):
             total_price += self.delivery_price
         return total_price
 
+    def refund_days_left(self):
+        if self.status == ReservationStatus.canceled:
+            days_to_return = 7
+            return days_to_return - (datetime.utcnow() - self.updated_at).days
+        elif self.status == ReservationStatus.complete:
+            days_to_return = 14
+            return days_to_return - (datetime.utcnow() - self.date_checkout).days
 
+    def refund_amount_usd(self):
+        amount = 0
+        if self.status == ReservationStatus.canceled:
+            amount += self.total_price()
+        if self.deposit_paid:
+            amount += self.deposit_amount
+        return amount
 
+    @staticmethod
+    def refund_notifications_count():
+        # TODO this is slow, need to cache
+        filter_expr = text('''CASE 
+	        WHEN status = 'canceled' THEN DATE_ADD(updated_at, INTERVAL 7 DAY) < CURRENT_TIMESTAMP 
+	        WHEN status = 'complete' THEN DATE_ADD(date_checkout, INTERVAL 14 DAY) < CURRENT_TIMESTAMP 
+            END''')
 
+        data = Reservation.query.filter(
+            Reservation.status.in_([ReservationStatus.canceled, ReservationStatus.complete]),
+            Reservation.deposit_amount > 0,
+            Reservation.deposit_paid == True,
+            Reservation.deposit_refunded == False,
+            filter_expr
+        ).order_by(Reservation.date_checkout).count()
+        return data
+
+    def is_photos_deletable(self):
+        if self.status in [ReservationStatus.canceled, ReservationStatus.complete]:
+            return False
+        return True
+
+    @cached_property
+    def information(self):
+        information = f"#{self.uuid[-4:]} Car: {self.car.car_name_plate()}"
+        if self.user and self.user.name:
+            information += f" Client: {self.user.name}"
+        elif self.driver and self.driver.name:
+            information += f" Client: {self.driver.name}"
+        return information

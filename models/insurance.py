@@ -1,22 +1,19 @@
 from datetime import datetime as dt
 
-from sqlalchemy import Column, Integer, DateTime, String, ForeignKey, Date
-from sqlalchemy.orm import relationship
-
-from models import base
+from app.db import db
 
 
-class CarInsurance(base):
+class CarInsurance(db.Model):
     __tablename__ = "car_insurances"
-    id = Column(Integer, primary_key=True)
-    created = Column(DateTime, default=dt.utcnow, nullable=False)
-    car_id = Column(Integer, ForeignKey("cars.id"), nullable=False)
-    car = relationship("Car")
-    company = Column(String(150), nullable=False)
-    expire_date = Column(Date, nullable=False)
-    url = Column(String(150))
-    manager_id = Column(Integer, ForeignKey("managers.id"), nullable=False)
-    manager = relationship("Manager")
+    id = db.Column(db.Integer, primary_key=True)
+    created = db.Column(db.DateTime, default=dt.utcnow, nullable=False)
+    car_id = db.Column(db.Integer, db.ForeignKey("cars.id"), nullable=False)
+    car = db.relationship("Car")
+    company = db.Column(db.String(150), nullable=False)
+    expire_date = db.Column(db.Date, nullable=False)
+    url = db.Column(db.String(150))
+    manager_id = db.Column(db.Integer, db.ForeignKey("managers.id"), nullable=False)
+    manager = db.relationship("Manager")
 
     @property
     def car_name_plate(self):
