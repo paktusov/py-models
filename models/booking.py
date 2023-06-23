@@ -2,7 +2,7 @@ import enum
 import math
 from datetime import datetime
 
-from dateutil.tz import tz
+# from dateutil.tz import tz
 from sqlalchemy import or_, Enum, Column, Integer, DateTime, String, ForeignKey, Boolean, Text, Numeric
 from sqlalchemy.orm import relationship
 
@@ -204,15 +204,15 @@ class Booking(base):
     def last_comment(self):
         return FleetLog.query.filter_by(target=self.id, item="reservation", action="comment").order_by(FleetLog.created.desc()).first()
 
-    def last_comment_formatted(self):
-        c = self.last_comment()
-        if not c:
-            return ''
-        to_zone = tz.gettz('america/los_angeles')
-        local = c.created.replace(tzinfo=tz.gettz('UTC'))
-        converted = local.astimezone(to_zone)
-        created = converted.strftime('%m/%d-%Y %H:%M')
-        return f'{created} {c.manager.fullname()}: {c.data}'
+    # def last_comment_formatted(self):
+    #     c = self.last_comment()
+    #     if not c:
+    #         return ''
+    #     to_zone = tz.gettz('america/los_angeles')
+    #     local = c.created.replace(tzinfo=tz.gettz('UTC'))
+    #     converted = local.astimezone(to_zone)
+    #     created = converted.strftime('%m/%d-%Y %H:%M')
+    #     return f'{created} {c.manager.fullname()}: {c.data}'
 
     # def expire_seconds_left(self):
     #     delta = datetime.utcnow() - self.created
