@@ -2,7 +2,7 @@ import enum
 
 from sqlalchemy import Column, Integer, DateTime, String, Boolean
 
-from models import base
+from . import base
 
 
 class MangerRole(enum.Enum):

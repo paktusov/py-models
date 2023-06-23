@@ -3,7 +3,7 @@ import enum
 from sqlalchemy import Column, Integer, DateTime, Enum, String, ForeignKey, Text
 from sqlalchemy.orm import synonym, relationship
 
-from models import base
+from . import base
 
 
 class CohostStatus(enum.Enum):

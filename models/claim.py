@@ -3,10 +3,10 @@ import enum
 from sqlalchemy import Column, Integer, DateTime, Enum, Text, ForeignKey
 from sqlalchemy.orm import relationship
 
-from models import base
-from models.booking import Booking
-from models.damage import CarDamage
-from models.turo_reservation import TuroReservation
+from . import base
+from .booking import Booking
+from .damage import CarDamage
+from .turo_reservation import TuroReservation
 
 
 class CarClaimStatus(enum.Enum):

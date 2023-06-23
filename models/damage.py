@@ -3,8 +3,8 @@ import enum
 from sqlalchemy import Enum, Column, Integer, ForeignKey, DateTime, String, Text
 from sqlalchemy.orm import relationship
 
-from models import base
-from models.car_event import CarEventFile, CarEventType
+from . import base
+from .car_event import CarEventFile, CarEventType
 
 BODY_PARTS = [
     'Front bumper',

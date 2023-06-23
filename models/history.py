@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String
 
-from models import base
+from . import base
 
 
 class History(base):

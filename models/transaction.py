@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import Enum, Column, Integer, DateTime, Numeric, String, ForeignKey, Boolean, Text
 from sqlalchemy.orm import relationship
 
-from models import base
+from . import base
 
 
 class Transaction(base):

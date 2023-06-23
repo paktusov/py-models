@@ -2,7 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import Column, Integer, DateTime, String
 
-from models import base
+from . import base
 
 SMS_NOTIFICATION_LIMIT_SEC = 120
 SMS_NOTIFICATION_STATUS_NEW = 0

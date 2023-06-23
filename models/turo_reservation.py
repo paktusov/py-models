@@ -6,8 +6,8 @@ from functools import cached_property
 from sqlalchemy import Enum, Column, Integer, DateTime, String, ForeignKey, Boolean, Text
 from sqlalchemy.orm import relationship
 
-from models import base
-from models.booking import Booking
+from . import base
+from .booking import Booking
 
 
 # TODO refactor turo stuff into separate file

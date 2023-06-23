@@ -2,7 +2,7 @@ import enum
 
 from sqlalchemy import Column, Integer, DateTime, String, Enum, Text
 
-from models import base
+from . import base
 
 
 class PromoCodeStatus(enum.Enum):

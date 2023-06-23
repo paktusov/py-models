@@ -7,10 +7,10 @@ import math
 
 from sqlalchemy.orm import relationship
 
-from models import base
-from models.booking import OrderPhoto
-from models.car_fuel import CarFuel, FuelSourceType
-from models.car_odometer import OdometerSourceType, CarOdometer
+from . import base
+from .booking import OrderPhoto
+from .car_fuel import CarFuel, FuelSourceType
+from .car_odometer import OdometerSourceType, CarOdometer
 
 
 class ReservationStatus(enum.Enum):

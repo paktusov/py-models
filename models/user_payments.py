@@ -4,7 +4,7 @@ from functools import cached_property
 
 from sqlalchemy import Enum, Column, Integer, DateTime, String, Text
 
-from models import base
+from . import base
 
 
 class UserPaymentType(enum.Enum):

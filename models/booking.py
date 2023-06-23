@@ -6,9 +6,9 @@ from datetime import datetime
 from sqlalchemy import or_, Enum, Column, Integer, DateTime, String, ForeignKey, Boolean, Text, Numeric
 from sqlalchemy.orm import relationship
 
-from models import base
-from models.fleet_log import FleetLog
-from models.manager import Manager
+from . import base
+from .fleet_log import FleetLog
+from .manager import Manager
 
 ORDER_STATUS_NEW = 0
 ORDER_STATUS_PAID = 1

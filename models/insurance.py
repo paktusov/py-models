@@ -3,7 +3,7 @@ from datetime import datetime as dt
 from sqlalchemy import Column, Integer, DateTime, ForeignKey, String, Date
 from sqlalchemy.orm import relationship
 
-from models import base
+from . import base
 
 
 class CarInsurance(base):

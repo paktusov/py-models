@@ -4,9 +4,9 @@ from datetime import datetime
 from sqlalchemy import Enum, Column, Integer, DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import relationship
 
-from models import base
+from . import base
 # this import fixes celery error about Car not being defined as a key
-from models.car import Car
+from .car import Car
 
 
 class CarTicketStatus(enum.Enum):

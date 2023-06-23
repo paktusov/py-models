@@ -1,10 +1,7 @@
-import json
-from datetime import datetime
-
 from sqlalchemy import Column, Integer, DateTime, String, Text, ForeignKey
 from sqlalchemy.orm import relationship
 
-from models import base
+from . import base
 
 
 class FleetLog(base):

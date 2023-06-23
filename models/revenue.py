@@ -3,7 +3,7 @@ import enum
 from sqlalchemy import Enum, Column, Integer, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
-from models import base
+from . import base
 
 
 class ReservationType(enum.Enum):

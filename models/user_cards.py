@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime
 
-from models import base
+from . import base
 
 
 class UserCard(base):

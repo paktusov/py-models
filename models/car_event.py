@@ -4,7 +4,7 @@ import json
 from sqlalchemy import Enum, Column, Integer, DateTime, ForeignKey, JSON, String, Boolean, Numeric, Text
 from sqlalchemy.orm import relationship
 
-from models import base
+from . import base
 
 
 class CarEventType(enum.Enum):

@@ -7,14 +7,14 @@ from datetime import datetime, timedelta
 from sqlalchemy import func, Column, Integer, DateTime, ForeignKey, String, Text, Numeric, Enum, Float, Boolean
 from sqlalchemy.orm import relationship
 
-from models import base
-from models.booking import Booking, ORDER_STATUS_PAID, ORDER_STATUS_NEW, ORDER_STATUS_CHECKIN_PROGRESS, \
+from . import base
+from .booking import Booking, ORDER_STATUS_PAID, ORDER_STATUS_NEW, ORDER_STATUS_CHECKIN_PROGRESS, \
     ORDER_STATUS_IN_TRIP, ORDER_STATUS_CHECKOUT_PROGRESS
-from models.car_event import CarEventType, CarEvent
-from models.config import S3_CDN_ENDPOINT, S3_ENDPOINT
-from models.insurance import CarInsurance
-from models.transaction import Transaction
-from models.turo_reservation import TuroReservation
+from .car_event import CarEventType, CarEvent
+from .config import S3_CDN_ENDPOINT, S3_ENDPOINT
+from .insurance import CarInsurance
+from .transaction import Transaction
+from .turo_reservation import TuroReservation
 
 CAR_STATUS_PENDING = 0
 CAR_STATUS_ACTIVE = 1

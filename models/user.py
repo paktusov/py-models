@@ -2,10 +2,10 @@ import enum
 
 from sqlalchemy import Enum, Column, Integer, DateTime, String
 
-from models import base
-from models.car import Car
-from models.driver import DriverVerification, DriverVerificationStatus
-from models.reservation import Reservation
+from . import base
+from .car import Car
+from .driver import DriverVerification, DriverVerificationStatus
+from .reservation import Reservation
 
 
 class UserVerification(enum.Enum):

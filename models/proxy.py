@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, DateTime, String, Text
 
-from models import base
+from . import base
 
 
 class Proxy(base):
