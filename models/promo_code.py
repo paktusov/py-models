@@ -1,6 +1,8 @@
 import enum
 
-from app.db import db
+from sqlalchemy import Column, Integer, DateTime, String, Enum, Text
+
+from models import base
 
 
 class PromoCodeStatus(enum.Enum):
@@ -9,12 +11,12 @@ class PromoCodeStatus(enum.Enum):
     deleted = "deleted"
 
 
-class PromoCode(db.Model):
+class PromoCode(base):
     __tablename__ = "promo_codes"
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, nullable=False)
-    updated = db.Column(db.DateTime)
-    name = db.Column(db.String(50), nullable=False)
-    discount = db.Column(db.Integer, nullable=False)
-    status = db.Column(db.Enum(PromoCodeStatus), nullable=False)
-    description = db.Column(db.Text)
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime, nullable=False)
+    updated = Column(DateTime)
+    name = Column(String(50), nullable=False)
+    discount = Column(Integer, nullable=False)
+    status = Column(Enum(PromoCodeStatus), nullable=False)
+    description = Column(Text)

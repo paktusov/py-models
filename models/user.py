@@ -1,11 +1,11 @@
 import enum
 
-from sqlalchemy import Enum
+from sqlalchemy import Enum, Column, Integer, DateTime, String
 
-from app.db import db
-from app.models.car import Car
-from app.models.driver import DriverVerification, DriverVerificationStatus
-from app.models.reservation import Reservation
+from models import base
+from models.car import Car
+from models.driver import DriverVerification, DriverVerificationStatus
+from models.reservation import Reservation
 
 
 class UserVerification(enum.Enum):
@@ -13,21 +13,21 @@ class UserVerification(enum.Enum):
     not_verified = "not approved"
 
 
-class User(db.Model):
+class User(base):
     __tablename__ = "users"
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
-    created = db.Column(db.DateTime, nullable=False)
-    updated = db.Column(db.DateTime, nullable=True)
-    phone = db.Column(db.String(64), nullable=False)
-    email = db.Column(db.String(64), nullable=True)
-    address = db.Column(db.String(250), nullable=True)
-    driver_license_number = db.Column(db.String(64), nullable=True)
-    name = db.Column(db.String(50), nullable=True)
-    uuid = db.Column(db.String(64), nullable=False)
-    auth_token = db.Column(db.String(256), nullable=False)
-    verification = db.Column(Enum(UserVerification), default="not_verified", nullable=False)
-    status = db.Column(db.Enum("active", "inactive"), default="active", nullable=False)
+    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    created = Column(DateTime, nullable=False)
+    updated = Column(DateTime, nullable=True)
+    phone = Column(String(64), nullable=False)
+    email = Column(String(64), nullable=True)
+    address = Column(String(250), nullable=True)
+    driver_license_number = Column(String(64), nullable=True)
+    name = Column(String(50), nullable=True)
+    uuid = Column(String(64), nullable=False)
+    auth_token = Column(String(256), nullable=False)
+    verification = Column(Enum(UserVerification), default="not_verified", nullable=False)
+    status = Column(Enum("active", "inactive"), default="active", nullable=False)
 
     # def __init__(self, phone, uuid, auth_token):
     #     self.phone = phone
@@ -73,4 +73,3 @@ class User(db.Model):
         if self.email:
             description.append(self.email)
         return " - ".join(description)
-

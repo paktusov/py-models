@@ -1,8 +1,9 @@
 import enum
 
-from sqlalchemy import Enum
+from sqlalchemy import Enum, Column, Integer, DateTime, ForeignKey, Boolean
+from sqlalchemy.orm import relationship
 
-from app.db import db
+from models import base
 
 
 class ReservationType(enum.Enum):
@@ -10,18 +11,18 @@ class ReservationType(enum.Enum):
     turo = "turo"
 
 
-class CarRevenue(db.Model):
+class CarRevenue(base):
     __tablename__ = "car_revenues"
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, nullable=False)
-    date_stat = db.Column(db.DateTime, nullable=False)
-    car_id = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
-    car = db.relationship('Car')
-    price_day = db.Column(db.Integer, nullable=True)
-    price_day_turo = db.Column(db.Integer, nullable=True)
-    day_in_trip = db.Column(db.Boolean(), nullable=False)
-    revenue = db.Column(db.Integer, nullable=True)
-    revenue_plan = db.Column(db.Integer, nullable=True)
-    rate = db.Column(db.Integer, nullable=True)
-    final_data = db.Column(db.Boolean(), nullable=False)
-    reservation_type = db.Column(Enum(ReservationType), nullable=False)
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime, nullable=False)
+    date_stat = Column(DateTime, nullable=False)
+    car_id = Column(Integer, ForeignKey('cars.id'), nullable=False)
+    car = relationship('Car')
+    price_day = Column(Integer, nullable=True)
+    price_day_turo = Column(Integer, nullable=True)
+    day_in_trip = Column(Boolean(), nullable=False)
+    revenue = Column(Integer, nullable=True)
+    revenue_plan = Column(Integer, nullable=True)
+    rate = Column(Integer, nullable=True)
+    final_data = Column(Boolean(), nullable=False)
+    reservation_type = Column(Enum(ReservationType), nullable=False)

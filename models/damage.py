@@ -1,9 +1,10 @@
 import enum
 
-from sqlalchemy import Enum
+from sqlalchemy import Enum, Column, Integer, ForeignKey, DateTime, String, Text
+from sqlalchemy.orm import relationship
 
-from app.db import db
-from app.models.car_event import CarEventFile, CarEventType
+from models import base
+from models.car_event import CarEventFile, CarEventType
 
 BODY_PARTS = [
     'Front bumper',
@@ -36,20 +37,20 @@ class CarDamageStatus(enum.Enum):
     canceled = "canceled"
 
 
-class CarDamage(db.Model):
+class CarDamage(base):
     __tablename__ = "car_damages"
-    id = db.Column(db.Integer, primary_key=True)
-    car_id = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
-    car = db.relationship('Car')
-    created = db.Column(db.DateTime, nullable=False)
-    status = db.Column(db.Enum(CarDamageStatus), nullable=False)
-    damage_part = db.Column(db.String(255), nullable=False)
-    reservation_id = db.Column(db.String(64), nullable=True)
-    reservation_type = db.Column(db.String(50), nullable=True)
-    manager_id = db.Column(db.Integer, db.ForeignKey('managers.id'), nullable=False)
-    manager = db.relationship('Manager')
-    comment = db.Column(db.Text, nullable=True)
-    claim_id = db.Column(db.Integer, nullable=True)
+    id = Column(Integer, primary_key=True)
+    car_id = Column(Integer, ForeignKey('cars.id'), nullable=False)
+    car = relationship('Car')
+    created = Column(DateTime, nullable=False)
+    status = Column(Enum(CarDamageStatus), nullable=False)
+    damage_part = Column(String(255), nullable=False)
+    reservation_id = Column(String(64), nullable=True)
+    reservation_type = Column(String(50), nullable=True)
+    manager_id = Column(Integer, ForeignKey('managers.id'), nullable=False)
+    manager = relationship('Manager')
+    comment = Column(Text, nullable=True)
+    claim_id = Column(Integer, nullable=True)
 
     @property
     def car_name_plate(self):

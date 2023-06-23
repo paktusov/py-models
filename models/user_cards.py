@@ -1,29 +1,31 @@
-from app.db import db
+from sqlalchemy import Column, Integer, String, DateTime
+
+from models import base
 
 
-class UserCard(db.Model):
+class UserCard(base):
     __tablename__ = "user_cards"
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
-    uuid = db.Column(db.String(36), nullable=False)
-    user_id = db.Column(db.Integer, nullable=False)
-    created = db.Column(db.DateTime, nullable=False)
-    token_id = db.Column(db.String(255))
-    consumer_id = db.Column(db.String(255))
-    card_number = db.Column(db.String(255))
-    card_type_name = db.Column(db.String(255))
-    card_type_code = db.Column(db.String(3))
-    card_issuer = db.Column(db.String(255))
-    card_scheme = db.Column(db.String(255))
-    card_account_type = db.Column(db.String(255))
-    card_expiration_date = db.Column(db.DateTime, nullable=False)
-    card_expiration_date_str = db.Column(db.String(255))
-    billing_first_name = db.Column(db.String(255))
-    billing_last_name = db.Column(db.String(255))
-    billing_address = db.Column(db.String(255))
-    billing_city = db.Column(db.String(255))
-    billing_zip = db.Column(db.String(255))
-    billing_state = db.Column(db.String(255))
-    billing_country = db.Column(db.String(255))
-    billing_email = db.Column(db.String(255))
-    billing_phone = db.Column(db.String(255))
+    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    uuid = Column(String(36), nullable=False)
+    user_id = Column(Integer, nullable=False)
+    created = Column(DateTime, nullable=False)
+    token_id = Column(String(255))
+    consumer_id = Column(String(255))
+    card_number = Column(String(255))
+    card_type_name = Column(String(255))
+    card_type_code = Column(String(3))
+    card_issuer = Column(String(255))
+    card_scheme = Column(String(255))
+    card_account_type = Column(String(255))
+    card_expiration_date = Column(DateTime, nullable=False)
+    card_expiration_date_str = Column(String(255))
+    billing_first_name = Column(String(255))
+    billing_last_name = Column(String(255))
+    billing_address = Column(String(255))
+    billing_city = Column(String(255))
+    billing_zip = Column(String(255))
+    billing_state = Column(String(255))
+    billing_country = Column(String(255))
+    billing_email = Column(String(255))
+    billing_phone = Column(String(255))

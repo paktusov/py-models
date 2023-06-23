@@ -1,8 +1,9 @@
 import enum
 
-from sqlalchemy import Enum
+from sqlalchemy import Enum, Column, Integer, DateTime, ForeignKey, String
+from sqlalchemy.orm import relationship
 
-from app.db import db
+from models import base
 
 
 class OdometerSource(enum.Enum):
@@ -14,14 +15,14 @@ class OdometerSourceType(enum.Enum):
     checkout = 'checkout'
 
 
-class CarOdometer(db.Model):
+class CarOdometer(base):
     __tablename__ = "car_odometer"
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, nullable=False)
-    # updated = db.Column(db.DateTime)
-    car_id = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
-    car = db.relationship('Car')
-    source = db.Column(Enum(OdometerSource), nullable=False)
-    source_uuid = db.Column(db.String(64))
-    odometer = db.Column(db.Integer, nullable=False)
-    source_type = db.Column(Enum(OdometerSourceType))
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime, nullable=False)
+    # updated = Column(DateTime)
+    car_id = Column(Integer, ForeignKey('cars.id'), nullable=False)
+    car = relationship('Car')
+    source = Column(Enum(OdometerSource), nullable=False)
+    source_uuid = Column(String(64))
+    odometer = Column(Integer, nullable=False)
+    source_type = Column(Enum(OdometerSourceType))

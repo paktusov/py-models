@@ -1,16 +1,16 @@
 import enum
-import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import cached_property
 
-from sqlalchemy import Enum, case, literal, func, text
+from sqlalchemy import Enum, text, Column, Integer, DateTime, String, ForeignKey, Boolean, Text
 import math
 
-from app.db import db
-from app.models.booking import OrderPhoto
-from app.models.car_event import CarEvent, CarEventType
-from app.models.car_fuel import CarFuel, FuelSourceType
-from app.models.car_odometer import OdometerSourceType, CarOdometer
+from sqlalchemy.orm import relationship
+
+from models import base
+from models.booking import OrderPhoto
+from models.car_fuel import CarFuel, FuelSourceType
+from models.car_odometer import OdometerSourceType, CarOdometer
 
 
 class ReservationStatus(enum.Enum):
@@ -38,38 +38,38 @@ class ReservationMileageType(enum.Enum):
     unlimited = 'unlimited'
 
 
-class Reservation(db.Model):
+class Reservation(base):
     __tablename__ = "reservations"
-    id = db.Column(db.Integer, primary_key=True)
-    created_at = db.Column(db.DateTime, nullable=False)
-    updated_at = db.Column(db.DateTime)
-    uuid = db.Column(db.String(130), nullable=False)
-    status = db.Column(Enum(ReservationStatus), default=ReservationStatus.new, nullable=False)
-    driver_id = db.Column(db.Integer, db.ForeignKey('drivers.id'), nullable=False)
-    # driver = db.relationship('Driver')
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    # user = db.relationship('User')
-    car_id = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
-    car = db.relationship('Car')
-    date_checkin = db.Column(db.DateTime, nullable=False)
-    date_checkout = db.Column(db.DateTime, nullable=False)
-    in_trip = db.Column(db.Boolean(), nullable=False)
-    insurance_type = db.Column(Enum(ReservationInsuranceType), nullable=False)
-    insurance_price = db.Column(db.Integer, nullable=False)
-    delivery_type = db.Column(Enum(ReservationDeliveryType), nullable=False)
-    delivery_price = db.Column(db.Integer, nullable=False)
-    delivery_address = db.Column(db.Text)
-    deposit_amount = db.Column(db.Integer, nullable=False)
-    deposit_paid = db.Column(db.Boolean(), nullable=False)
-    deposit_refunded = db.Column(db.Boolean(), nullable=False)
-    mileage_type = db.Column(Enum(ReservationMileageType), nullable=False)
-    mileage_unlimited_price = db.Column(db.Integer, nullable=False)
-    mileage_limited_included = db.Column(db.Integer, nullable=False)
-    mileage_limited_price = db.Column(db.Integer, nullable=False)
-    promo_code = db.Column(db.String(32))
-    promo_code_discount = db.Column(db.Integer)
-    car_price = db.Column(db.Integer, nullable=False)
-    trip_fee_price = db.Column(db.Integer)
+    id = Column(Integer, primary_key=True)
+    created_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime)
+    uuid = Column(String(130), nullable=False)
+    status = Column(Enum(ReservationStatus), default=ReservationStatus.new, nullable=False)
+    driver_id = Column(Integer, ForeignKey('drivers.id'), nullable=False)
+    # driver = relationship('Driver')
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    # user = relationship('User')
+    car_id = Column(Integer, ForeignKey('cars.id'), nullable=False)
+    car = relationship('Car')
+    date_checkin = Column(DateTime, nullable=False)
+    date_checkout = Column(DateTime, nullable=False)
+    in_trip = Column(Boolean(), nullable=False)
+    insurance_type = Column(Enum(ReservationInsuranceType), nullable=False)
+    insurance_price = Column(Integer, nullable=False)
+    delivery_type = Column(Enum(ReservationDeliveryType), nullable=False)
+    delivery_price = Column(Integer, nullable=False)
+    delivery_address = Column(Text)
+    deposit_amount = Column(Integer, nullable=False)
+    deposit_paid = Column(Boolean(), nullable=False)
+    deposit_refunded = Column(Boolean(), nullable=False)
+    mileage_type = Column(Enum(ReservationMileageType), nullable=False)
+    mileage_unlimited_price = Column(Integer, nullable=False)
+    mileage_limited_included = Column(Integer, nullable=False)
+    mileage_limited_price = Column(Integer, nullable=False)
+    promo_code = Column(String(32))
+    promo_code_discount = Column(Integer)
+    car_price = Column(Integer, nullable=False)
+    trip_fee_price = Column(Integer)
 
     @staticmethod
     def calc_days(start, finish) -> int:

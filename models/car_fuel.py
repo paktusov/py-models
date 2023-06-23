@@ -1,8 +1,9 @@
 import enum
 
-from sqlalchemy import Enum
+from sqlalchemy import Enum, Column, Integer, DateTime, ForeignKey, String
+from sqlalchemy.orm import relationship
 
-from app.db import db
+from models import base
 
 
 class FuelSource(enum.Enum):
@@ -14,14 +15,14 @@ class FuelSourceType(enum.Enum):
     checkout = 'checkout'
 
 
-class CarFuel(db.Model):
+class CarFuel(base):
     __tablename__ = "car_fuel"
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, nullable=False)
-    # updated = db.Column(db.DateTime)
-    car_id = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
-    car = db.relationship('Car')
-    source = db.Column(Enum(FuelSource), nullable=False)
-    source_uuid = db.Column(db.String(64))
-    fuel_level = db.Column(db.Integer, nullable=False, comment='Fuel level in percent')
-    source_type = db.Column(Enum(FuelSourceType))
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime, nullable=False)
+    updated = Column(DateTime)
+    car_id = Column(Integer, ForeignKey('cars.id'), nullable=False)
+    car = relationship('Car')
+    source = Column(Enum(FuelSource), nullable=False)
+    source_uuid = Column(String(64))
+    fuel_level = Column(Integer, nullable=False, comment='Fuel level in percent')
+    source_type = Column(Enum(FuelSourceType))

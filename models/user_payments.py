@@ -2,9 +2,9 @@ import enum
 import json
 from functools import cached_property
 
-from sqlalchemy import Enum
+from sqlalchemy import Enum, Column, Integer, DateTime, String, Text
 
-from app.db import db
+from models import base
 
 
 class UserPaymentType(enum.Enum):
@@ -28,20 +28,20 @@ class UserPaymentStatus(enum.Enum):
     unknown = "unknown"
 
 
-class UserPayment(db.Model):
+class UserPayment(base):
     __tablename__ = "user_payments"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
-    created = db.Column(db.DateTime, nullable=False)
-    uuid = db.Column(db.String(255), nullable=False)
-    payment_type = db.Column(Enum(UserPaymentType), nullable=False)
-    user_uuid = db.Column(db.String(64))
-    reservation_uuid = db.Column(db.String(64))
-    amount = db.Column(db.String(12))
-    status = db.Column(Enum(UserPaymentStatus), nullable=False)
-    data = db.Column(db.Text)
-    raw = db.Column(db.Text)
-    reference = db.Column(db.String(255))
-    card_number = db.Column(db.String(16))
+    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    created = Column(DateTime, nullable=False)
+    uuid = Column(String(255), nullable=False)
+    payment_type = Column(Enum(UserPaymentType), nullable=False)
+    user_uuid = Column(String(64))
+    reservation_uuid = Column(String(64))
+    amount = Column(String(12))
+    status = Column(Enum(UserPaymentStatus), nullable=False)
+    data = Column(Text)
+    raw = Column(Text)
+    reference = Column(String(255))
+    card_number = Column(String(16))
 
     @cached_property
     def data_deserialize(self):

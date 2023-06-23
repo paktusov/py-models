@@ -1,7 +1,8 @@
 from datetime import datetime
 
-from app.db import db
+from sqlalchemy import Column, Integer, DateTime, String
 
+from models import base
 
 SMS_NOTIFICATION_LIMIT_SEC = 120
 SMS_NOTIFICATION_STATUS_NEW = 0
@@ -16,15 +17,15 @@ SMS_NOTIFICATION_STATUS_CANCELED = 7
 SMS_TEXT_OWNER_ACCESS = "Hello! Here is your access link to Carsan\n\nhttps://cohost.carsan.com/a/{token}"
 
 
-class SmsNotification(db.Model):
+class SmsNotification(base):
     __tablename__ = 'sms_notifications'
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, nullable=False)
-    updated = db.Column(db.DateTime)
-    body = db.Column(db.String(256), nullable=False)
-    sid = db.Column(db.String(64), unique=True)
-    recipient = db.Column(db.String(32), nullable=False)
-    lifetime_min = db.Column(db.Integer, default=60)
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime, nullable=False)
+    updated = Column(DateTime)
+    body = Column(String(256), nullable=False)
+    sid = Column(String(64), unique=True)
+    recipient = Column(String(32), nullable=False)
+    lifetime_min = Column(Integer, default=60)
     """
     0 - new, not sent
     1 - locked for sending
@@ -35,22 +36,8 @@ class SmsNotification(db.Model):
     6 - expired
     7 - experimental, testing, do not send
     """
-    status = db.Column(db.Integer, default=0)
-    error = db.Column(db.String(128))
-
-    @staticmethod
-    def create(to, text):
-        try:
-            sms = SmsNotification(
-                created=datetime.utcnow(),
-                recipient=to,
-                body=text
-            )
-            db.session.add(sms)
-            db.session.commit()
-            return sms.id, None
-        except Exception as e:
-            return None, str(e)
+    status = Column(Integer, default=0)
+    error = Column(String(128))
 
     def expire_in(self):
         td = datetime.utcnow() - self.created

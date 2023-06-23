@@ -2,29 +2,30 @@ import enum
 import random
 from datetime import datetime, timedelta
 
-from sqlalchemy import Enum
+from sqlalchemy import Enum, Column, Integer, DateTime, Numeric, String, ForeignKey, Boolean, Text
+from sqlalchemy.orm import relationship
 
-from app.db import db
+from models import base
 
 
-class Transaction(db.Model):
+class Transaction(base):
     __tablename__ = "transactions"
-    id = db.Column(db.Integer, primary_key=True)
-    tx_date = db.Column(db.DateTime, nullable=False)
-    created = db.Column(db.DateTime, nullable=False)
-    updated = db.Column(db.DateTime, nullable=True)
-    amount = db.Column(db.Numeric(10, 2), nullable=False)
-    tx_type = db.Column(db.String(10), nullable=False)
-    comment = db.Column(db.String(150))
-    manager_id = db.Column(db.Integer, db.ForeignKey('managers.id'))
-    manager = db.relationship('Manager')
-    car_id = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
-    car = db.relationship('Car')
-    direction = db.Column(db.String(5), nullable=False)
-    is_visible = db.Column(db.Boolean, nullable=False, default=False)
-    invoice_url = db.Column(db.String(150))
-    hash = db.Column(db.String(64), nullable=False, unique=True, index=True)
-    is_deleted = db.Column(db.Boolean, nullable=False, default=False)
+    id = Column(Integer, primary_key=True)
+    tx_date = Column(DateTime, nullable=False)
+    created = Column(DateTime, nullable=False)
+    updated = Column(DateTime, nullable=True)
+    amount = Column(Numeric(10, 2), nullable=False)
+    tx_type = Column(String(10), nullable=False)
+    comment = Column(String(150))
+    manager_id = Column(Integer, ForeignKey('managers.id'))
+    manager = relationship('Manager')
+    car_id = Column(Integer, ForeignKey('cars.id'), nullable=False)
+    car = relationship('Car')
+    direction = Column(String(5), nullable=False)
+    is_visible = Column(Boolean, nullable=False, default=False)
+    invoice_url = Column(String(150))
+    hash = Column(String(64), nullable=False, unique=True, index=True)
+    is_deleted = Column(Boolean, nullable=False, default=False)
 
     def transaction_date_fmt(self):
         return self.tx_date.strftime("%b %m. %Y")
@@ -35,7 +36,7 @@ class Transaction(db.Model):
 
     @staticmethod
     def get_upcoming(owner_id=None, car_id=None):
-        from app.models.car import Car
+        from models.car import Car
         '''
         returns tuple (list of trasactions, total_summ)
         '''
@@ -96,16 +97,16 @@ class TxType(enum.Enum):
     payment = "payment"
 
 
-class TransactionV1(db.Model):
+class TransactionV1(base):
     __tablename__ = "transactions_v1"
-    id = db.Column(db.Integer, primary_key=True)
-    uuid = db.Column(db.String(36), nullable=False)
-    created = db.Column(db.DateTime, nullable=False)
-    tx_type = db.Column(Enum(TxType), nullable=False)
-    source = db.Column(Enum(Source), nullable=False)
-    source_uuid = db.Column(db.String(64))
-    target = db.Column(Enum(Target))
-    target_uuid = db.Column(db.String(64), nullable=False)
-    amount = db.Column(db.Integer, nullable=False)
-    category = db.Column(Enum(Category), nullable=False)
-    description = db.Column(db.Text)
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36), nullable=False)
+    created = Column(DateTime, nullable=False)
+    tx_type = Column(Enum(TxType), nullable=False)
+    source = Column(Enum(Source), nullable=False)
+    source_uuid = Column(String(64))
+    target = Column(Enum(Target))
+    target_uuid = Column(String(64), nullable=False)
+    amount = Column(Integer, nullable=False)
+    category = Column(Enum(Category), nullable=False)
+    description = Column(Text)

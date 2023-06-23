@@ -1,8 +1,9 @@
 import enum
 
-from sqlalchemy import Enum
+from sqlalchemy import Enum, Column, Integer, DateTime, ForeignKey, Text
+from sqlalchemy.orm import relationship
 
-from app.db import db
+from models import base
 
 
 class ParserCarPriceStatus(enum.Enum):
@@ -12,15 +13,15 @@ class ParserCarPriceStatus(enum.Enum):
     ERROR = 'error'
 
 
-class ParserCarPrice(db.Model):
+class ParserCarPrice(base):
     __tablename__ = "parser_car_prices"
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, nullable=False)
-    updated = db.Column(db.DateTime, nullable=False)
-    price_usd = db.Column(db.Integer, nullable=False)
-    status = db.Column(Enum(ParserCarPriceStatus), nullable=False)
-    # old_price_usd = db.Column(db.Integer, nullable=False)
-    car_id = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
-    car = db.relationship('Car')
-    raw = db.Column(db.Text)
-    error = db.Column(db.Text)
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime, nullable=False)
+    updated = Column(DateTime, nullable=False)
+    price_usd = Column(Integer, nullable=False)
+    status = Column(Enum(ParserCarPriceStatus), nullable=False)
+    # old_price_usd = Column(Integer, nullable=False)
+    car_id = Column(Integer, ForeignKey('cars.id'), nullable=False)
+    car = relationship('Car')
+    raw = Column(Text)
+    error = Column(Text)

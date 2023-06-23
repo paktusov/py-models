@@ -4,16 +4,17 @@ import logging
 from calendar import monthrange
 from datetime import datetime, timedelta
 
-from sqlalchemy import func
+from sqlalchemy import func, Column, Integer, DateTime, ForeignKey, String, Text, Numeric, Enum, Float, Boolean
+from sqlalchemy.orm import relationship
 
-from app.db import db
-from app.models.booking import Booking, ORDER_STATUS_PAID, ORDER_STATUS_NEW, ORDER_STATUS_CHECKIN_PROGRESS, \
+from models import base
+from models.booking import Booking, ORDER_STATUS_PAID, ORDER_STATUS_NEW, ORDER_STATUS_CHECKIN_PROGRESS, \
     ORDER_STATUS_IN_TRIP, ORDER_STATUS_CHECKOUT_PROGRESS
-from app.models.car_event import CarEventType, CarEvent
-from app.models.insurance import CarInsurance
-from app.models.transaction import Transaction
-from app.models.turo_reservation import TuroReservation
-from app.config import S3_CDN_ENDPOINT, S3_ENDPOINT
+from models.car_event import CarEventType, CarEvent
+from models.config import S3_CDN_ENDPOINT, S3_ENDPOINT
+from models.insurance import CarInsurance
+from models.transaction import Transaction
+from models.turo_reservation import TuroReservation
 
 CAR_STATUS_PENDING = 0
 CAR_STATUS_ACTIVE = 1
@@ -33,45 +34,45 @@ class CarPaymentSystemType(enum.Enum):
     percent = 'percent'
 
 
-class Car(db.Model):
+class Car(base):
     __tablename__ = "cars"
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, nullable=False)
-    updated = db.Column(db.DateTime)
-    make_id = db.Column(db.Integer, db.ForeignKey('car_make.id'), nullable=False)
-    make = db.relationship('CarMake')
-    model_id = db.Column(db.Integer, db.ForeignKey('car_models.id'), nullable=False)
-    model = db.relationship('CarModel')
-    year = db.Column(db.String(150), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    doors = db.Column(db.Integer, nullable=True)
-    seats = db.Column(db.Integer, nullable=True)
-    mpg = db.Column(db.Integer, nullable=True)
-    deposit = db.Column(db.Integer, nullable=False, default=500)
-    miles_included = db.Column(db.Integer, nullable=False)
-    unlimited_miles_price = db.Column(db.Float, nullable=False)
-    power_type = db.Column(db.String(150), nullable=True)
-    plate = db.Column(db.String(150), nullable=False)
-    vin = db.Column(db.String(150), nullable=True)
-    comment = db.Column(db.Text, nullable=True)
-    # monthly_payment = db.Column(db.Numeric(10,2), nullable=True)
-    price_day = db.Column(db.Numeric(10,2), nullable=True)
-    price_day_cache = db.Column(db.Numeric(10,2), nullable=True)
-    rating = db.Column(db.Numeric(10,2), nullable=True)
-    turo_url = db.Column(db.String(150), nullable=True)
-    turo_id = db.Column(db.Integer, nullable=True, unique=True)
-    platform = db.Column(db.String(32), nullable=False)
-    # owner = db.Column(db.String(150), nullable=False)
-    user_id = db.Column(db.Integer, nullable=False)
-    # user = db.relationship('User')
-    owner_id = db.Column(db.Integer, db.ForeignKey('car_owners.id'), nullable=False)
-    owner = db.relationship('CarOwner')
-    manager_id = db.Column(db.Integer, db.ForeignKey('managers.id'), nullable=False)
-    manager = db.relationship('Manager')
-    # photo_url = db.Column(db.String(150), nullable=True)
-    location = db.Column(db.String(150), nullable=False)
-    registration_link = db.Column(db.String(150), nullable=True)
-    registration_expire_date = db.Column(db.DateTime)
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime, nullable=False)
+    updated = Column(DateTime)
+    make_id = Column(Integer, ForeignKey('car_make.id'), nullable=False)
+    make = relationship('CarMake')
+    model_id = Column(Integer, ForeignKey('car_models.id'), nullable=False)
+    model = relationship('CarModel')
+    year = Column(String(150), nullable=False)
+    description = Column(Text, nullable=True)
+    doors = Column(Integer, nullable=True)
+    seats = Column(Integer, nullable=True)
+    mpg = Column(Integer, nullable=True)
+    deposit = Column(Integer, nullable=False, default=500)
+    miles_included = Column(Integer, nullable=False)
+    unlimited_miles_price = Column(Float, nullable=False)
+    power_type = Column(String(150), nullable=True)
+    plate = Column(String(150), nullable=False)
+    vin = Column(String(150), nullable=True)
+    comment = Column(Text, nullable=True)
+    # monthly_payment = Column(Numeric(10,2), nullable=True)
+    price_day = Column(Numeric(10,2), nullable=True)
+    price_day_cache = Column(Numeric(10,2), nullable=True)
+    rating = Column(Numeric(10,2), nullable=True)
+    turo_url = Column(String(150), nullable=True)
+    turo_id = Column(Integer, nullable=True, unique=True)
+    platform = Column(String(32), nullable=False)
+    # owner = Column(String(150), nullable=False)
+    user_id = Column(Integer, nullable=False)
+    # user = relationship('User')
+    owner_id = Column(Integer, ForeignKey('car_owners.id'), nullable=False)
+    owner = relationship('CarOwner')
+    manager_id = Column(Integer, ForeignKey('managers.id'), nullable=False)
+    manager = relationship('Manager')
+    # photo_url = Column(String(150), nullable=True)
+    location = Column(String(150), nullable=False)
+    registration_link = Column(String(150), nullable=True)
+    registration_expire_date = Column(DateTime)
     '''
         0 - pending
         1 - active
@@ -79,7 +80,7 @@ class Car(db.Model):
         3 - recall
         10 - deleted
         '''
-    status = db.Column(db.Integer, nullable=False, default=0)
+    status = Column(Integer, nullable=False, default=0)
     '''
         0 - n/a
         1 - co-host
@@ -87,7 +88,7 @@ class Car(db.Model):
         3 - finance
         4 - carsana
     '''
-    ownership = db.Column(db.Integer, nullable=False, default=0)
+    ownership = Column(Integer, nullable=False, default=0)
     '''
         0 - n/a
         1 - sedan
@@ -100,77 +101,34 @@ class Car(db.Model):
         8 - Three-wheeler
         10 - other
     '''
-    body = db.Column(db.Integer, default=0)
+    body = Column(Integer, default=0)
     # ownership - finance
-    # finance_name = db.Column(db.String(150))
-    finance_bank_info = db.Column(db.Text)
-    finance_payment_day = db.Column(db.Integer)
-    finance_monthly_payment = db.Column(db.String(32))
-    finance_start_date = db.Column(db.DateTime)
+    # finance_name = Column(String(150))
+    finance_bank_info = Column(Text)
+    finance_payment_day = Column(Integer)
+    finance_monthly_payment = Column(String(32))
+    finance_start_date = Column(DateTime)
     # ownership - partner
-    partner_bank_info = db.Column(db.Text)
-    partner_payment_day = db.Column(db.Integer)
-    partner_monthly_payment = db.Column(db.String(32))
-    partner_monthly_earnings = db.Column(db.String(32))
-    partner_payout_day = db.Column(db.Integer)
-    partner_start_date = db.Column(db.DateTime)
+    partner_bank_info = Column(Text)
+    partner_payment_day = Column(Integer)
+    partner_monthly_payment = Column(String(32))
+    partner_monthly_earnings = Column(String(32))
+    partner_payout_day = Column(Integer)
+    partner_start_date = Column(DateTime)
     # ownership - partner
-    # cohost_name = db.Column(db.String(100))
-    cohost_monthly_payment = db.Column(db.String(32))
-    cohost_monthly_payment_percent = db.Column(db.Integer)
-    cohost_payment_system_type = db.Column(db.Enum(CarPaymentSystemType))
-    cohost_payout_day = db.Column(db.Integer)
-    cohost_start_date = db.Column(db.DateTime)
-    cohost_checkin = db.Column(db.String(150))
-    revenue = db.Column(db.Integer)
-    alias_name = db.Column(db.String(250))
+    # cohost_name = Column(String(100))
+    cohost_monthly_payment = Column(String(32))
+    cohost_monthly_payment_percent = Column(Integer)
+    cohost_payment_system_type = Column(Enum(CarPaymentSystemType))
+    cohost_payout_day = Column(Integer)
+    cohost_start_date = Column(DateTime)
+    cohost_checkin = Column(String(150))
+    revenue = Column(Integer)
+    alias_name = Column(String(250))
     debug = dict()
 
     def is_self_hosted(self):
         return self.platform == "self"
-
-    @staticmethod
-    def registration_notifications_count():
-        cnt = 0
-        cars = Car.query.all()
-        for c in cars:
-            days = c.registration_expire_days_left()
-            if not days:
-                continue
-            if days < 10:
-                cnt += 1
-        return cnt
-
-    @staticmethod
-    def registration_notifications_count():
-        cnt = 0
-        cars = Car.query.all()
-        for c in cars:
-            days = c.registration_expire_days_left()
-            if not days:
-                continue
-            if days < 10:
-                cnt += 1
-        return cnt
-
-    @staticmethod
-    def insurance_notifications_count():
-        cnt = 0
-
-        subq = db.session.query(
-            CarInsurance.car_id,
-            func.max(CarInsurance.id).label("max_id")
-        ).group_by(CarInsurance.car_id).subquery()
-
-        insurances = CarInsurance.query.join(subq, CarInsurance.id == subq.c.max_id).all()
-
-        for insurance in insurances:
-            days = insurance.expire_days_left
-            if not days:
-                continue
-            if days < 10:
-                cnt += 1
-        return cnt
 
     @property
     def odometer_list(self):
@@ -266,7 +224,7 @@ class Car(db.Model):
         for c in cars:
             turo_id = c.turo_url.split('/')[-1]
             c.turo_id = turo_id
-            db.session.commit()
+            session.commit()
 
     @staticmethod
     def get_status_list_from_str(status_str):
@@ -457,7 +415,7 @@ class Car(db.Model):
             price = CarPriceHistory.latest_price(c.id)
             if price > 0:
                 c.price_day = price
-            db.session.commit()
+            session.commit()
 
     @staticmethod
     def count_state(status_list, platform=None, location=None):
@@ -868,56 +826,56 @@ class Car(db.Model):
         except:
             return 0
 
-    def update_price(self, price):
-        """
-        returns
-        was_updated (bool), error (str)
-        """
-        try:
-            new_price = int(float(price))
-            old_price_obj = CarPriceHistory.latest_price_obj(self.id)
-            if old_price_obj:
-                old_price = old_price_obj.price
-                delta = datetime.utcnow() - old_price_obj.created
-            else:
-                old_price = 0
-                delta = datetime.utcnow() - datetime.utcnow()
-            # print("{}/{}".format(old_price, new_price))
-            # if prices are the same but 1 day passed - add anyway for statistics
+    # def update_price(self, price):
+    #     """
+    #     returns
+    #     was_updated (bool), error (str)
+    #     """
+    #     try:
+    #         new_price = int(float(price))
+    #         old_price_obj = CarPriceHistory.latest_price_obj(self.id)
+    #         if old_price_obj:
+    #             old_price = old_price_obj.price
+    #             delta = datetime.utcnow() - old_price_obj.created
+    #         else:
+    #             old_price = 0
+    #             delta = datetime.utcnow() - datetime.utcnow()
+    #         # print("{}/{}".format(old_price, new_price))
+    #         # if prices are the same but 1 day passed - add anyway for statistics
+    #
+    #         is_old = delta.days > 0
+    #         if new_price == old_price and is_old:
+    #             logging.info("car {} new price the same but adding anyways ({} sec old)".format(self.id, timedelta.total_seconds()))
+    #         if new_price != old_price or is_old:
+    #             p = CarPriceHistory(
+    #                 created=datetime.utcnow(),
+    #                 price=new_price,
+    #                 car_id=self.id
+    #             )
+    #             session.add(p)
+    #             # used in catalog for sorting
+    #             self.price_day_cache = new_price
+    #             self.updated = datetime.utcnow()
+    #             session.commit()
+    #             # TODO add logs
+    #             logging.info('car {} price updated {} -> {}'.format(self.id, old_price, new_price))
+    #             return True, None
+    #         else:
+    #             # TODO remove later, no need, just to reset some cache for now
+    #             self.updated = datetime.utcnow()
+    #             logging.info("car {} has the same price {}".format(self.id, old_price))
+    #             return False, None
+    #     except Exception as e:
+    #         logging.error(f'update_price error:{e}')
+    #         return False, str(e)
 
-            is_old = delta.days > 0
-            if new_price == old_price and is_old:
-                logging.info("car {} new price the same but adding anyways ({} sec old)".format(self.id, timedelta.total_seconds()))
-            if new_price != old_price or is_old:
-                p = CarPriceHistory(
-                    created=datetime.utcnow(),
-                    price=new_price,
-                    car_id=self.id
-                )
-                db.session.add(p)
-                # used in catalog for sorting
-                self.price_day_cache = new_price
-                self.updated = datetime.utcnow()
-                db.session.commit()
-                # TODO add logs
-                logging.info('car {} price updated {} -> {}'.format(self.id, old_price, new_price))
-                return True, None
-            else:
-                # TODO remove later, no need, just to reset some cache for now
-                self.updated = datetime.utcnow()
-                logging.info("car {} has the same price {}".format(self.id, old_price))
-                return False, None
-        except Exception as e:
-            logging.error(f'update_price error:{e}')
-            return False, str(e)
-
-    def update_description(self, description):
-        if self.description != description:
-            self.description = description
-            self.updated = datetime.utcnow()
-            db.session.commit()
-            return True
-        return False
+    # def update_description(self, description):
+    #     if self.description != description:
+    #         self.description = description
+    #         self.updated = datetime.utcnow()
+    #         session.commit()
+    #         return True
+    #     return False
 
     @staticmethod
     def helper_format_date_js(date_obj: object) -> object:
@@ -997,44 +955,44 @@ class Car(db.Model):
         )
 
 
-class CarMake(db.Model):
+class CarMake(base):
     __tablename__ = "car_make"
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False)
+    id = Column(Integer, primary_key=True)
+    name = Column(String(80), nullable=False)
 
     def __repr__(self):
         return '<CarMake %r>' % self.id
 
 
-class CarModel(db.Model):
+class CarModel(base):
     __tablename__ = "car_models"
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False)
-    make_id = db.Column(db.Integer, db.ForeignKey('car_make.id'), nullable=False)
-    make = db.relationship('CarMake')
+    id = Column(Integer, primary_key=True)
+    name = Column(String(80), nullable=False)
+    make_id = Column(Integer, ForeignKey('car_make.id'), nullable=False)
+    make = relationship('CarMake')
 
     def __repr__(self):
         return '<CarModel %r>' % self.id
 
 
-class CarOwner(db.Model):
+class CarOwner(base):
     __tablename__ = "car_owners"
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, nullable=False)
-    updated = db.Column(db.DateTime)
-    name = db.Column(db.String(150), nullable=False)
-    last_name = db.Column(db.String(150))
-    phone = db.Column(db.String(150), nullable=False)
-    email = db.Column(db.String(150))
-    address = db.Column(db.String(150))
-    payment_method = db.Column(db.String(150))
-    driver_license = db.Column(db.String(150))
-    password = db.Column(db.String(150))
-    comment = db.Column(db.Text)
-    manager_id = db.Column(db.Integer, db.ForeignKey('managers.id'))
-    manager = db.relationship('Manager')
-    auth_token = db.Column(db.String(32), unique=True)
-    auth_token_updated = db.Column(db.DateTime)
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime, nullable=False)
+    updated = Column(DateTime)
+    name = Column(String(150), nullable=False)
+    last_name = Column(String(150))
+    phone = Column(String(150), nullable=False)
+    email = Column(String(150))
+    address = Column(String(150))
+    payment_method = Column(String(150))
+    driver_license = Column(String(150))
+    password = Column(String(150))
+    comment = Column(Text)
+    manager_id = Column(Integer, ForeignKey('managers.id'))
+    manager = relationship('Manager')
+    auth_token = Column(String(32), unique=True)
+    auth_token_updated = Column(DateTime)
 
     def fullname(self):
         return "{} {}".format(self.name, self.last_name)
@@ -1148,17 +1106,17 @@ class CarOwner(db.Model):
         txs_upcoming, txs_upcoming_total = Transaction.get_upcoming(owner_id=self.id)
         return txs_upcoming, txs_upcoming_total
 
-    def token_regenerate(self):
-        try:
-            from hashlib import md5
-            str = "{}{}".format(self.phone, datetime.utcnow())
-            new_token = md5(str.encode()).hexdigest()[:5]
-            self.auth_token = new_token
-            self.auth_token_updated = datetime.utcnow()
-            db.session.commit()
-        except Exception as e:
-            return False, e
-        return True, None
+    # def token_regenerate(self):
+    #     try:
+    #         from hashlib import md5
+    #         str = "{}{}".format(self.phone, datetime.utcnow())
+    #         new_token = md5(str.encode()).hexdigest()[:5]
+    #         self.auth_token = new_token
+    #         self.auth_token_updated = datetime.utcnow()
+    #         session.commit()
+    #     except Exception as e:
+    #         return False, e
+    #     return True, None
 
     def format_phone(self):
         if not self.phone:
@@ -1188,25 +1146,25 @@ class CarOwner(db.Model):
         return '<Owner %r>' % self.id
 
 
-class CarPhoto(db.Model):
+class CarPhoto(base):
     __tablename__ = "car_photos"
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, nullable=False)
-    updated = db.Column(db.DateTime)
-    status = db.Column(db.Integer, nullable=False)
-    car_id = db.Column(db.Integer, nullable=False)
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime, nullable=False)
+    updated = Column(DateTime)
+    status = Column(Integer, nullable=False)
+    car_id = Column(Integer, nullable=False)
     # used for ordering inside car gallery
-    weight = db.Column(db.Integer)
+    weight = Column(Integer)
     # main car photos, should be only one per car
-    is_main = db.Column(db.Boolean, nullable=False)
+    is_main = Column(Boolean, nullable=False)
     # url got from turo parser
-    url = db.Column(db.String(150), nullable=True)
+    url = Column(String(150), nullable=True)
     # url got from turo parser
-    url_tn = db.Column(db.String(150), nullable=True)
-    size = db.Column(db.String(10), nullable=True)
+    url_tn = Column(String(150), nullable=True)
+    size = Column(String(10), nullable=True)
     # uploaded files to s3
-    big = db.Column(db.String(50), nullable=False)
-    tn = db.Column(db.String(50), nullable=False)
+    big = Column(String(50), nullable=False)
+    tn = Column(String(50), nullable=False)
 
     @staticmethod
     def list_active(car_id):
@@ -1261,12 +1219,12 @@ class CarPhoto(db.Model):
         return "{}/_cars/{}/{}".format(S3_CDN_ENDPOINT, self.car_id, self.big)
 
 
-class CarPriceHistory(db.Model):
+class CarPriceHistory(base):
     __tablename__ = "car_prices"
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, nullable=False)
-    price = db.Column(db.Integer, nullable=False)
-    car_id = db.Column(db.Integer, nullable=False)
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime, nullable=False)
+    price = Column(Integer, nullable=False)
+    car_id = Column(Integer, nullable=False)
 
     @staticmethod
     def latest_price_obj(car_id):

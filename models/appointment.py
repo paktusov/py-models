@@ -1,9 +1,9 @@
 import enum
 
-from sqlalchemy.orm import synonym
+from sqlalchemy import Column, Integer, DateTime, Enum, String, ForeignKey, Text
+from sqlalchemy.orm import synonym, relationship
 
-from app.config import HOST_URL_ADM
-from app.db import db
+from models import base
 
 
 class CohostStatus(enum.Enum):
@@ -18,20 +18,20 @@ class City(enum.Enum):
     miami = 'miami'
 
 
-class CohostAppointment(db.Model):
+class CohostAppointment(base):
     __tablename__ = "cohost_appointments"
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, nullable=False)
-    status = db.Column(db.Enum(CohostStatus), default=CohostStatus.new, nullable=False)
-    car_details = db.Column(db.Integer, db.ForeignKey('car_models.id'), nullable=False)
-    city = db.Column(db.Enum(City), nullable=False)
-    mode = db.Column(db.String(50), nullable=False)
-    owner_id = db.Column(db.Integer, db.ForeignKey('car_owners.id'), nullable=False)
-    owner = db.relationship('CarOwner')
-    appointment_date = db.Column(db.String(50), nullable=False)
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime, nullable=False)
+    status = Column(Enum(CohostStatus), default=CohostStatus.new, nullable=False)
+    car_details = Column(Integer, ForeignKey('car_models.id'), nullable=False)
+    city = Column(Enum(City), nullable=False)
+    mode = Column(String(50), nullable=False)
+    owner_id = Column(Integer, ForeignKey('car_owners.id'), nullable=False)
+    owner = relationship('CarOwner')
+    appointment_date = Column(String(50), nullable=False)
     event_time = synonym("appointment_date")
-    comment = db.Column(db.Text)
-    updated = db.Column(db.DateTime)
+    comment = Column(Text)
+    updated = Column(DateTime)
 
     @property
     def get_statuses(self):
@@ -49,5 +49,5 @@ class CohostAppointment(db.Model):
     def car_make(self):
         return f'{self.model.make.name}'
 
-    def get_url(self):
-        return f'{HOST_URL_ADM}/appointment/{self.id}'
+    def get_url(self, url):
+        return f'{url}/appointment/{self.id}'

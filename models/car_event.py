@@ -1,9 +1,10 @@
 import enum
 import json
 
-from sqlalchemy import Enum
+from sqlalchemy import Enum, Column, Integer, DateTime, ForeignKey, JSON, String, Boolean, Numeric, Text
+from sqlalchemy.orm import relationship
 
-from app.db import db
+from models import base
 
 
 class CarEventType(enum.Enum):
@@ -16,7 +17,9 @@ class CarEventType(enum.Enum):
     checkin = "check in"
     checkout = "check out"
 
-class CarEvent(db.Model):
+
+# noinspection PyInterpreter
+class CarEvent(base):
     """
     car events created by fleet managers
     types:
@@ -25,15 +28,15 @@ class CarEvent(db.Model):
     damage
     """
     __tablename__ = "car_events"
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, nullable=False)
-    event_type = db.Column(Enum(CarEventType), nullable=False)
-    car_id = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
-    car = db.relationship('Car')
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime, nullable=False)
+    event_type = Column(Enum(CarEventType), nullable=False)
+    car_id = Column(Integer, ForeignKey('cars.id'), nullable=False)
+    car = relationship('Car')
     # common data storage for all event types
-    data = db.Column(db.JSON, nullable=False)
-    manager_id = db.Column(db.Integer, db.ForeignKey('managers.id'), nullable=False)
-    manager = db.relationship('Manager')
+    data = Column(JSON, nullable=False)
+    manager_id = Column(Integer, ForeignKey('managers.id'), nullable=False)
+    manager = relationship('Manager')
 
     @property
     def car_name_plate(self):
@@ -131,16 +134,16 @@ class CarEventFileFunc(enum.Enum):
     receipt = 'receipt'
 
 
-class CarEventFile(db.Model):
+class CarEventFile(base):
     __tablename__ = "car_event_files"
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, nullable=False)
-    file_type = db.Column(Enum(CarEventFileType), nullable=False)
-    url = db.Column(db.String(150), nullable=False)
-    event_id = db.Column(db.Integer, nullable=False)
-    event_type = db.Column(Enum(CarEventType), nullable=False)
-    file_func = db.Column(Enum(CarEventFileFunc), nullable=False)
-    is_active = db.Column(db.Boolean, nullable=True, default=True)
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime, nullable=False)
+    file_type = Column(Enum(CarEventFileType), nullable=False)
+    url = Column(String(150), nullable=False)
+    event_id = Column(Integer, nullable=False)
+    event_type = Column(Enum(CarEventType), nullable=False)
+    file_func = Column(Enum(CarEventFileFunc), nullable=False)
+    is_active = Column(Boolean, nullable=True, default=True)
 
 
 class CarEventClaimType(enum.Enum):
@@ -150,28 +153,28 @@ class CarEventClaimType(enum.Enum):
     self = 3 # carsan
 
 
-class CarEventClaim(db.Model):
+class CarEventClaim(base):
     """
     car claim event created by fleet managers
     """
     __tablename__ = "car_event_claims"
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, nullable=False)
-    claim_type = db.Column(Enum(CarEventClaimType), nullable=False)
-    car_id = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
-    car = db.relationship('Car')
-    reservation_id = db.Column(db.Integer, db.ForeignKey('bookings.id'), nullable=True)
-    reservation = db.relationship('Booking')
-    claim_number = db.Column(db.String(50), nullable=False)
-    cash_repair_price_usd = db.Column(db.Numeric(10, 2), nullable=False)
-    estimate_amount_usd = db.Column(db.Numeric(10, 2), nullable=False)
-    estimate_photo_url = db.Column(db.String(150), nullable=False)
-    supplement_amount_usd = db.Column(db.Numeric(10, 2), nullable=False)
-    supplement_photo_url = db.Column(db.String(150), nullable=False)
-    supplement2_amount_usd = db.Column(db.Numeric(10, 2), nullable=False)
-    supplement2_photo_url = db.Column(db.String(150), nullable=False)
-    repair_price_usd = db.Column(db.Numeric(10, 2), nullable=False)
-    last_showup_date = db.Column(db.DateTime, nullable=False)
-    comment = db.Column(db.Text)
-    manager_id = db.Column(db.Integer, db.ForeignKey('managers.id'), nullable=False)
-    manager = db.relationship('Manager')
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime, nullable=False)
+    claim_type = Column(Enum(CarEventClaimType), nullable=False)
+    car_id = Column(Integer, ForeignKey('cars.id'), nullable=False)
+    car = relationship('Car')
+    reservation_id = Column(Integer, ForeignKey('bookings.id'), nullable=True)
+    reservation = relationship('Booking')
+    claim_number = Column(String(50), nullable=False)
+    cash_repair_price_usd = Column(Numeric(10, 2), nullable=False)
+    estimate_amount_usd = Column(Numeric(10, 2), nullable=False)
+    estimate_photo_url = Column(String(150), nullable=False)
+    supplement_amount_usd = Column(Numeric(10, 2), nullable=False)
+    supplement_photo_url = Column(String(150), nullable=False)
+    supplement2_amount_usd = Column(Numeric(10, 2), nullable=False)
+    supplement2_photo_url = Column(String(150), nullable=False)
+    repair_price_usd = Column(Numeric(10, 2), nullable=False)
+    last_showup_date = Column(DateTime, nullable=False)
+    comment = Column(Text)
+    manager_id = Column(Integer, ForeignKey('managers.id'), nullable=False)
+    manager = relationship('Manager')

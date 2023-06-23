@@ -3,12 +3,12 @@ import math
 from datetime import datetime
 
 from dateutil.tz import tz
-from sqlalchemy import or_, Enum
+from sqlalchemy import or_, Enum, Column, Integer, DateTime, String, ForeignKey, Boolean, Text, Numeric
+from sqlalchemy.orm import relationship
 
-from app.db import db
-from app.models.fleet_log import FleetLog
-from app.models.manager import Manager
-from app.config import ORDER_LIMIT_EXPIRE_MIN
+from models import base
+from models.fleet_log import FleetLog
+from models.manager import Manager
 
 ORDER_STATUS_NEW = 0
 ORDER_STATUS_PAID = 1
@@ -47,37 +47,37 @@ class BookingStatus(enum.Enum):
     issue_damage = 10
 
 
-class OrderPhoto(db.Model):
+class OrderPhoto(base):
     __tablename__ = "order_photos"
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, nullable=False)
-    updated = db.Column(db.DateTime)
-    status = db.Column(db.Integer, default=1, nullable=False)
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime, nullable=False)
+    updated = Column(DateTime)
+    status = Column(Integer, default=1, nullable=False)
     '''
     1 - visible
     0 - hidden
     '''
-    photo_type = db.Column(db.String(30), nullable=False)
+    photo_type = Column(String(30), nullable=False)
     '''
     driver
     checkin
     checkout
     '''
-    order_id = db.Column(db.Integer, db.ForeignKey('reservations.id'), nullable=False)
-    manager_id = db.Column(db.Integer, db.ForeignKey('managers.id'), nullable=False)
-    manager = db.relationship('Manager')
-    url = db.Column(db.String(150), nullable=False)
+    order_id = Column(Integer, ForeignKey('reservations.id'), nullable=False)
+    manager_id = Column(Integer, ForeignKey('managers.id'), nullable=False)
+    manager = relationship('Manager')
+    url = Column(String(150), nullable=False)
 
     def __repr__(self):
         return '<OrderPhoto %r>' % self.id
 
 
-class Booking(db.Model):
+class Booking(base):
     __tablename__ = "bookings"
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime)
-    updated = db.Column(db.DateTime)
-    status = db.Column(db.Integer, nullable=False, default=0)
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime)
+    updated = Column(DateTime)
+    status = Column(Integer, nullable=False, default=0)
     '''
     ORDER_STATUS_NEW = 0
     ORDER_STATUS_PAID = 1
@@ -87,47 +87,47 @@ class Booking(db.Model):
     ORDER_STATUS_COMPLETE = 5
     ORDER_STATUS_ISSUE_DAMAGE = 10
     '''
-    date_checkin = db.Column(db.DateTime, nullable=False)
-    date_checkout = db.Column(db.DateTime, nullable=False)
-    trip = db.Column(db.String(120))
-    img = db.Column(db.String(120))
-    address = db.Column(db.String(120))
-    link = db.Column(db.String(120))
-    client_name = db.Column(db.String(120), nullable=False)
-    client_phone = db.Column(db.String(120), nullable=False)
-    client_email = db.Column(db.String(120), nullable=False)
-    location_parking = db.Column(db.String(120), nullable=False)
-    location_delivery = db.Column(db.String(120))
-    location_dropoff = db.Column(db.String(120))
-    delivery_price = db.Column(db.Integer, default=0)
-    unlimited_mileage = db.Column(db.Boolean(), default=False)
-    full_insurance = db.Column(db.Boolean(), default=False)
-    insurance_type = db.Column(Enum(BookingInsuranceType), nullable=False)
-    hash = db.Column(db.String(64), unique=True)
-    # order_ref = db.Column(db.String(32), unique=True)
-    odometer_start = db.Column(db.Integer)
-    odometer_end = db.Column(db.Integer)
-    fuel_start = db.Column(db.Integer)
-    fuel_end = db.Column(db.Integer)
-    deposit_usd = db.Column(db.Integer, nullable=False)
-    promo_code = db.Column(db.String(32), nullable=True)
-    promo_code_discount = db.Column(db.Integer, nullable=True)
-    is_deposit_paid = db.Column(db.Boolean(), default=False)
-    is_deposit_refunded = db.Column(db.Boolean(), default=False)
-    trip_fee_day_cents = db.Column(db.Integer)
-    trip_fee_total_cents = db.Column(db.Integer)
-    source = db.Column(db.String(80))
-    comment = db.Column(db.Text)
-    note_fleet = db.Column(db.Text)
-    manager_id = db.Column(db.Integer, nullable=False)
-    car_id = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
-    car = db.relationship('Car')
-    parent_reservation_id = db.Column(db.Integer, nullable=True)
-    over_mileage = db.Column(db.Integer, nullable=True)
-    reimbursements_mileage_usd = db.Column(db.Integer, nullable=True)
-    excessive_fuel = db.Column(db.Integer, nullable=True)
-    reimbursements_fuel_usd = db.Column(db.Integer, nullable=True)
-    is_smoking = db.Column(db.Boolean(), nullable=True)
+    date_checkin = Column(DateTime, nullable=False)
+    date_checkout = Column(DateTime, nullable=False)
+    trip = Column(String(120))
+    img = Column(String(120))
+    address = Column(String(120))
+    link = Column(String(120))
+    client_name = Column(String(120), nullable=False)
+    client_phone = Column(String(120), nullable=False)
+    client_email = Column(String(120), nullable=False)
+    location_parking = Column(String(120), nullable=False)
+    location_delivery = Column(String(120))
+    location_dropoff = Column(String(120))
+    delivery_price = Column(Integer, default=0)
+    unlimited_mileage = Column(Boolean(), default=False)
+    full_insurance = Column(Boolean(), default=False)
+    insurance_type = Column(Enum(BookingInsuranceType), nullable=False)
+    hash = Column(String(64), unique=True)
+    # order_ref = Column(String(32), unique=True)
+    odometer_start = Column(Integer)
+    odometer_end = Column(Integer)
+    fuel_start = Column(Integer)
+    fuel_end = Column(Integer)
+    deposit_usd = Column(Integer, nullable=False)
+    promo_code = Column(String(32), nullable=True)
+    promo_code_discount = Column(Integer, nullable=True)
+    is_deposit_paid = Column(Boolean(), default=False)
+    is_deposit_refunded = Column(Boolean(), default=False)
+    trip_fee_day_cents = Column(Integer)
+    trip_fee_total_cents = Column(Integer)
+    source = Column(String(80))
+    comment = Column(Text)
+    note_fleet = Column(Text)
+    manager_id = Column(Integer, nullable=False)
+    car_id = Column(Integer, ForeignKey('cars.id'), nullable=False)
+    car = relationship('Car')
+    parent_reservation_id = Column(Integer, nullable=True)
+    over_mileage = Column(Integer, nullable=True)
+    reimbursements_mileage_usd = Column(Integer, nullable=True)
+    excessive_fuel = Column(Integer, nullable=True)
+    reimbursements_fuel_usd = Column(Integer, nullable=True)
+    is_smoking = Column(Boolean(), nullable=True)
 
     @staticmethod
     def get_bookings_select():
@@ -198,8 +198,8 @@ class Booking(db.Model):
     #         delivery_price=0,
     #         comment='automatic order from turo'
     #     )
-    #     db.session.add(reservation)
-    #     db.session.commit()
+    #     session.add(reservation)
+    #     session.commit()
 
     def last_comment(self):
         return FleetLog.query.filter_by(target=self.id, item="reservation", action="comment").order_by(FleetLog.created.desc()).first()
@@ -214,15 +214,15 @@ class Booking(db.Model):
         created = converted.strftime('%m/%d-%Y %H:%M')
         return f'{created} {c.manager.fullname()}: {c.data}'
 
-    def expire_seconds_left(self):
-        delta = datetime.utcnow() - self.created
-        seconds_passed = delta.total_seconds()
-        seconds_duration = ORDER_LIMIT_EXPIRE_MIN * 60
-        seconds_left = seconds_duration - seconds_passed
-        seconds_left = int(float(seconds_left))
-        if seconds_left < 0:
-            seconds_left = 0
-        return seconds_left
+    # def expire_seconds_left(self):
+    #     delta = datetime.utcnow() - self.created
+    #     seconds_passed = delta.total_seconds()
+    #     seconds_duration = ORDER_LIMIT_EXPIRE_MIN * 60
+    #     seconds_left = seconds_duration - seconds_passed
+    #     seconds_left = int(float(seconds_left))
+    #     if seconds_left < 0:
+    #         seconds_left = 0
+    #     return seconds_left
 
     def get_manager(self):
         if not self.manager_id:
@@ -251,25 +251,25 @@ class Booking(db.Model):
     def get_extended_to(self):
         return Booking.query.filter_by(parent_reservation_id=self.id).first()
 
-    def set_as_paid(self):
-        try:
-            self.status = ORDER_STATUS_PAID
-            self.updated = datetime.utcnow()
-            # TODO add tx id
-            db.session.commit()
-            return True, None
-        except Exception as e:
-            return False, str(e)
+    # def set_as_paid(self):
+    #     try:
+    #         self.status = ORDER_STATUS_PAID
+    #         self.updated = datetime.utcnow()
+    #         # TODO add tx id
+    #         session.commit()
+    #         return True, None
+    #     except Exception as e:
+    #         return False, str(e)
 
-    def set_deposit_as_paid(self):
-        try:
-            self.is_deposit_paid = True
-            self.updated = datetime.utcnow()
-            # TODO add tx id
-            db.session.commit()
-            return True, None
-        except Exception as e:
-            return False, str(e)
+    # def set_deposit_as_paid(self):
+    #     try:
+    #         self.is_deposit_paid = True
+    #         self.updated = datetime.utcnow()
+    #         # TODO add tx id
+    #         session.commit()
+    #         return True, None
+    #     except Exception as e:
+    #         return False, str(e)
 
     def hash_short(self):
         return self.hash[:5]
@@ -502,10 +502,10 @@ class Booking(db.Model):
         return count
 
     # TODO fix with relative object column
-    def car_name(self):
-        from app.models.car import Car
-        car = Car.query.filter(Car.id == self.car_id).first()
-        return f'{car.model.make.name} {car.model.name} {car.year}'
+    # def car_name(self):
+    #     from app.models.car import Car
+    #     car = Car.query.filter(Car.id == self.car_id).first()
+    #     return f'{car.model.make.name} {car.model.name} {car.year}'
 
     def __repr__(self):
         return '<Booking %r>' % self.id
@@ -516,21 +516,21 @@ class BookingTransactionType(enum.Enum):
     manual = 1
 
 
-class BookingTransaction(db.Model):
+class BookingTransaction(base):
     __tablename__ = "booking_transactions"
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, nullable=False)
-    amount_cents = db.Column(db.Numeric(10, 2), nullable=False)
-    label = db.Column(db.String(32), nullable=False)
-    tx_type = db.Column(Enum(BookingTransactionType), nullable=False)
-    direction = db.Column(db.String(5), nullable=False)
-    comment = db.Column(db.String(150))
-    hash = db.Column(db.String(64), nullable=False, unique=True, index=True)
-    manager_id = db.Column(db.Integer, db.ForeignKey('managers.id'))
-    manager = db.relationship('Manager')
-    reservation_id = db.Column(db.Integer, db.ForeignKey('bookings.id'), nullable=False, index=True)
-    invoice_url = db.Column(db.String(150))
-    raw = db.Column(db.Text)
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime, nullable=False)
+    amount_cents = Column(Numeric(10, 2), nullable=False)
+    label = Column(String(32), nullable=False)
+    tx_type = Column(Enum(BookingTransactionType), nullable=False)
+    direction = Column(String(5), nullable=False)
+    comment = Column(String(150))
+    hash = Column(String(64), nullable=False, unique=True, index=True)
+    manager_id = Column(Integer, ForeignKey('managers.id'))
+    manager = relationship('Manager')
+    reservation_id = Column(Integer, ForeignKey('bookings.id'), nullable=False, index=True)
+    invoice_url = Column(String(150))
+    raw = Column(Text)
 
 
 class BookingPhotoType(enum.Enum):
@@ -541,17 +541,17 @@ class BookingPhotoType(enum.Enum):
     check_out_driver = 4
 
 
-class BookingPhoto(db.Model):
+class BookingPhoto(base):
     __tablename__ = "booking_photos"
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, nullable=False)
-    photo_type = db.Column(db.String(30), nullable=False)
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime, nullable=False)
+    photo_type = Column(String(30), nullable=False)
     '''
     driver
-    checkin
+    checkinx
     checkout
     '''
-    url = db.Column(db.String(150), nullable=False)
-    booking_id = db.Column(db.Integer, nullable=False)
-    manager_id = db.Column(db.Integer, db.ForeignKey('managers.id'), nullable=False)
-    manager = db.relationship('Manager')
+    url = Column(String(150), nullable=False)
+    booking_id = Column(Integer, nullable=False)
+    manager_id = Column(Integer, ForeignKey('managers.id'), nullable=False)
+    manager = relationship('Manager')
