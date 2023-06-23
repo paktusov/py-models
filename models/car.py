@@ -4,11 +4,17 @@ import logging
 from calendar import monthrange
 from datetime import datetime, timedelta
 
-from sqlalchemy import Column, Integer, DateTime, ForeignKey, String, Text, Numeric, Enum, Float, Boolean
+from sqlalchemy import func, Column, Integer, DateTime, ForeignKey, String, Text, Numeric, Enum, Float, Boolean
 from sqlalchemy.orm import relationship
 
 from . import base
+from .booking import Booking, ORDER_STATUS_PAID, ORDER_STATUS_NEW, ORDER_STATUS_CHECKIN_PROGRESS, \
+    ORDER_STATUS_IN_TRIP, ORDER_STATUS_CHECKOUT_PROGRESS
+from .car_event import CarEventType, CarEvent
 from .config import S3_CDN_ENDPOINT, S3_ENDPOINT
+from .insurance import CarInsurance
+from .transaction import Transaction
+from .turo_reservation import TuroReservation
 
 CAR_STATUS_PENDING = 0
 CAR_STATUS_ACTIVE = 1
@@ -124,37 +130,37 @@ class Car(base):
     def is_self_hosted(self):
         return self.platform == "self"
 
-    # @property
-    # def odometer_list(self):
-    #     return CarEvent.query.filter_by(
-    #         car_id=self.id,
-    #         event_type=CarEventType.odometer
-    #     ).order_by(CarEvent.created.desc()).all()
+    @property
+    def odometer_list(self):
+        return CarEvent.query.filter_by(
+            car_id=self.id,
+            event_type=CarEventType.odometer
+        ).order_by(CarEvent.created.desc()).all()
 
-    # @property
-    # def last_odometer(self) -> int | None:
-    #     last_odometer = CarEvent.query.filter_by(
-    #         car_id=self.id,
-    #         event_type=CarEventType.odometer
-    #     ).order_by(CarEvent.created.desc()).first()
-    #     if not last_odometer:
-    #         return None
-    #     return last_odometer.data_deserialize.get('mileage')
+    @property
+    def last_odometer(self) -> int | None:
+        last_odometer = CarEvent.query.filter_by(
+            car_id=self.id,
+            event_type=CarEventType.odometer
+        ).order_by(CarEvent.created.desc()).first()
+        if not last_odometer:
+            return None
+        return last_odometer.data_deserialize.get('mileage')
 
-    # @property
-    # def fuel_list(self):
-    #     return CarEvent.query.filter_by(
-    #         car_id=self.id,
-    #         event_type=CarEventType.fuel
-    #     ).order_by(CarEvent.created.desc()).all()
+    @property
+    def fuel_list(self):
+        return CarEvent.query.filter_by(
+            car_id=self.id,
+            event_type=CarEventType.fuel
+        ).order_by(CarEvent.created.desc()).all()
 
 
-    # @property
-    # def fuel(self):
-    #     return CarEvent.query.filter_by(
-    #         car_id=self.id,
-    #         event_type=CarEventType.fuel
-    #     ).order_by(CarEvent.created.desc()).first().data_deserialize.get('level')
+    @property
+    def fuel(self):
+        return CarEvent.query.filter_by(
+            car_id=self.id,
+            event_type=CarEventType.fuel
+        ).order_by(CarEvent.created.desc()).first().data_deserialize.get('level')
 
     @property
     def get_statuses(self):
@@ -186,13 +192,13 @@ class Car(base):
     def extra_miles_price_cents(self):
         return int(self.price() * 0.75)
 
-    # @property
-    # def insurance_link(self):
-    #     return CarInsurance.query.filter_by(car_id=self.id).order_by(CarInsurance.id.desc()).first().url
+    @property
+    def insurance_link(self):
+        return CarInsurance.query.filter_by(car_id=self.id).order_by(CarInsurance.id.desc()).first().url
 
-    # @property
-    # def insurance_expire_date(self):
-    #     return CarInsurance.query.filter_by(car_id=self.id).order_by(CarInsurance.id.desc()).first().expire_date
+    @property
+    def insurance_expire_date(self):
+        return CarInsurance.query.filter_by(car_id=self.id).order_by(CarInsurance.id.desc()).first().expire_date
 
     @property
     def insurance_expire_days_left(self):
@@ -202,8 +208,9 @@ class Car(base):
         return delta.days
 
     @property
-    # def insurance_company(self):
-    #     return CarInsurance.query.filter_by(car_id=self.id).order_by(CarInsurance.id.desc()).first().company
+    def insurance_company(self):
+        return CarInsurance.query.filter_by(car_id=self.id).order_by(CarInsurance.id.desc()).first().company
+
 
     def registration_expire_days_left(self):
         if not self.registration_expire_date:
@@ -211,13 +218,13 @@ class Car(base):
         delta = self.registration_expire_date - datetime.utcnow()
         return delta.days
 
-    # @staticmethod
-    # def fix_turo_ids():
-    #     cars = Car.query.filter(Car.turo_url != None).all()
-    #     for c in cars:
-    #         turo_id = c.turo_url.split('/')[-1]
-    #         c.turo_id = turo_id
-    #         session.commit()
+    @staticmethod
+    def fix_turo_ids():
+        cars = Car.query.filter(Car.turo_url != None).all()
+        for c in cars:
+            turo_id = c.turo_url.split('/')[-1]
+            c.turo_id = turo_id
+            session.commit()
 
     @staticmethod
     def get_status_list_from_str(status_str):
@@ -234,11 +241,12 @@ class Car(base):
         else:
             return [0, 1, 2, 3]
 
-    # def count_events(self, event_type=None):
-    #     query = CarEvent.query.filter(CarEvent.car_id == self.id)
-    #     if event_type:
-    #         query = query.filter(CarEvent.event_type == event_type)
-    #     return query.count()
+    def count_events(self, event_type=None):
+        query = CarEvent.query.filter(CarEvent.car_id == self.id)
+        if event_type:
+            query = query.filter(CarEvent.event_type == event_type)
+        return query.count()
+
 
     def json_dates_booked(self):
         # return json.dumps(self.dates_booked())
@@ -248,6 +256,7 @@ class Car(base):
         for k in dates_booked_dict.keys():
             dates_booked.append(k)
         return json.dumps(dates_booked)
+
 
     def dates_booked_format_adm(self):
         # format [2022,9,10], // october 10
@@ -263,70 +272,70 @@ class Car(base):
             dates_list.append(f'[{new_date_year}, {new_date_mon_corrected_for_js}, {new_date_day}],')
         return dates_list
 
-    # def is_available_now(self):
-    #     # check for availability of now (today) + 24h
-    #     # self-orders
-    #     order = Booking.query.filter(
-    #         Booking.car_id == self.id,
-    #         Booking.date_checkout >= datetime.utcnow(),
-    #         Booking.date_checkin <= datetime.utcnow() + timedelta(days=1),
-    #         # Booking.status.in_([ORDER_STATUS_PAID, ORDER_STATUS_NEW])
-    #     ).first()
-    #     if order:
-    #         return False
-    #
-    #     # check for turo reservations
-    #     # TODO move const to config or enum
-    #     turo_valid_statuses = ['BOOKED']
-    #     turo_reservation = TuroReservation.query.filter(
-    #         TuroReservation.car_id == self.id,
-    #         TuroReservation.date_reservation_end >= datetime.utcnow(),
-    #         TuroReservation.date_reservation_start <= datetime.utcnow() + timedelta(days=1),
-    #         TuroReservation.status_str.in_(turo_valid_statuses)
-    #     ).first()
-    #     if turo_reservation:
-    #         return False
-    #     return True
+    def is_available_now(self):
+        # check for availability of now (today) + 24h
+        # self-orders
+        order = Booking.query.filter(
+            Booking.car_id == self.id,
+            Booking.date_checkout >= datetime.utcnow(),
+            Booking.date_checkin <= datetime.utcnow() + timedelta(days=1),
+            # Booking.status.in_([ORDER_STATUS_PAID, ORDER_STATUS_NEW])
+        ).first()
+        if order:
+            return False
 
-    # def is_available(self, current_date: datetime) -> bool:
-    #     # self-orders
-    #     order = Booking.query.filter(
-    #         Booking.car_id == self.id,
-    #         Booking.date_checkout >= current_date,
-    #         Booking.date_checkin <= current_date + timedelta(days=1),
-    #     ).first()
-    #     if order:
-    #         return False
-    #
-    #     # check for turo reservations
-    #     # TODO move const to config or enum
-    #     turo_reservation = TuroReservation.query.filter(
-    #         TuroReservation.car_id == self.id,
-    #         TuroReservation.date_reservation_end >= current_date,
-    #         TuroReservation.date_reservation_start <= current_date + timedelta(days=1),
-    #     ).first()
-    #     if turo_reservation:
-    #         return False
-    #     return True
+        # check for turo reservations
+        # TODO move const to config or enum
+        turo_valid_statuses = ['BOOKED']
+        turo_reservation = TuroReservation.query.filter(
+            TuroReservation.car_id == self.id,
+            TuroReservation.date_reservation_end >= datetime.utcnow(),
+            TuroReservation.date_reservation_start <= datetime.utcnow() + timedelta(days=1),
+            TuroReservation.status_str.in_(turo_valid_statuses)
+        ).first()
+        if turo_reservation:
+            return False
+        return True
 
-    # def dates_booked_from(self, date_from: datetime) -> list:
-    #     obj_list = []
-    #     orders = Booking.query.filter(
-    #         Booking.car_id == self.id,
-    #         Booking.date_checkout > date_from,
-    #         Booking.status.in_([ORDER_STATUS_PAID, ORDER_STATUS_NEW])
-    #     )
-    #     for o in orders:
-    #         for i in range(0, o.days()):
-    #             day = o.date_checkin + timedelta(days=i)
-    #             obj_list.append(day)
-    #
-    #     # extend with dates from turo calendar
-    #     # TODO add turo orders
-    #
-    #     obj_list.sort()
-    #     obj_list.reverse()
-    #     return obj_list
+    def is_available(self, current_date: datetime) -> bool:
+        # self-orders
+        order = Booking.query.filter(
+            Booking.car_id == self.id,
+            Booking.date_checkout >= current_date,
+            Booking.date_checkin <= current_date + timedelta(days=1),
+        ).first()
+        if order:
+            return False
+
+        # check for turo reservations
+        # TODO move const to config or enum
+        turo_reservation = TuroReservation.query.filter(
+            TuroReservation.car_id == self.id,
+            TuroReservation.date_reservation_end >= current_date,
+            TuroReservation.date_reservation_start <= current_date + timedelta(days=1),
+        ).first()
+        if turo_reservation:
+            return False
+        return True
+
+    def dates_booked_from(self, date_from: datetime) -> list:
+        obj_list = []
+        orders = Booking.query.filter(
+            Booking.car_id == self.id,
+            Booking.date_checkout > date_from,
+            Booking.status.in_([ORDER_STATUS_PAID, ORDER_STATUS_NEW])
+        )
+        for o in orders:
+            for i in range(0, o.days()):
+                day = o.date_checkin + timedelta(days=i)
+                obj_list.append(day)
+
+        # extend with dates from turo calendar
+        # TODO add turo orders
+
+        obj_list.sort()
+        obj_list.reverse()
+        return obj_list
 
     def is_booked_between_dates(self, date_start: datetime, date_end: datetime) -> bool:
         # create date keys for all days between dates
@@ -350,46 +359,46 @@ class Car(base):
                 break
         return is_available
 
-    # def dates_booked(self):
-    #     date_format = "%Y-%m-%d"
-    #     valid_statuses = [ORDER_STATUS_NEW, ORDER_STATUS_PAID, ORDER_STATUS_CHECKIN_PROGRESS, ORDER_STATUS_IN_TRIP, ORDER_STATUS_CHECKOUT_PROGRESS]
-    #     orders = Booking.query.filter(
-    #         Booking.car_id == self.id,
-    #         # Booking.date_checkout >= datetime.utcnow(),
-    #         Booking.status.in_(valid_statuses)
-    #     )
-    #     # format range of dates for json output
-    #     dates_booked = {}
-    #     for o in orders:
-    #         for i in range(0, o.days()):
-    #             day = o.date_checkin + timedelta(days=i)
-    #             date_key = day.strftime(date_format)
-    #             d = dict(
-    #                 date=date_key,
-    #                 source="carsana",
-    #                 order_id=o.id
-    #             )
-    #             # dates_booked.append(d)
-    #             dates_booked[date_key] = d
-    #
-    #     # extend with turo reservations
-    #     turo_reservations = TuroReservation.query.filter(TuroReservation.car_id == self.id, TuroReservation.status_str != 'CANCELLED').all()
-    #     for tr in turo_reservations:
-    #         delta = tr.date_reservation_end - tr.date_reservation_start
-    #         delta_days = int(delta.total_seconds() // 3600 // 24)
-    #         full_days = delta_days+1
-    #         for i in range(full_days):
-    #             date_obj = tr.date_reservation_start + timedelta(days=i)
-    #             date_key = date_obj.strftime(date_format)
-    #             if date_key not in dates_booked:
-    #                 d = dict(
-    #                     date=date_key,
-    #                     source="turo",
-    #                     turo_id=tr.turo_id
-    #                 )
-    #                 dates_booked[date_key] = d
-    #
-    #     return dates_booked
+    def dates_booked(self):
+        date_format = "%Y-%m-%d"
+        valid_statuses = [ORDER_STATUS_NEW, ORDER_STATUS_PAID, ORDER_STATUS_CHECKIN_PROGRESS, ORDER_STATUS_IN_TRIP, ORDER_STATUS_CHECKOUT_PROGRESS]
+        orders = Booking.query.filter(
+            Booking.car_id == self.id,
+            # Booking.date_checkout >= datetime.utcnow(),
+            Booking.status.in_(valid_statuses)
+        )
+        # format range of dates for json output
+        dates_booked = {}
+        for o in orders:
+            for i in range(0, o.days()):
+                day = o.date_checkin + timedelta(days=i)
+                date_key = day.strftime(date_format)
+                d = dict(
+                    date=date_key,
+                    source="carsana",
+                    order_id=o.id
+                )
+                # dates_booked.append(d)
+                dates_booked[date_key] = d
+
+        # extend with turo reservations
+        turo_reservations = TuroReservation.query.filter(TuroReservation.car_id == self.id, TuroReservation.status_str != 'CANCELLED').all()
+        for tr in turo_reservations:
+            delta = tr.date_reservation_end - tr.date_reservation_start
+            delta_days = int(delta.total_seconds() // 3600 // 24)
+            full_days = delta_days+1
+            for i in range(full_days):
+                date_obj = tr.date_reservation_start + timedelta(days=i)
+                date_key = date_obj.strftime(date_format)
+                if date_key not in dates_booked:
+                    d = dict(
+                        date=date_key,
+                        source="turo",
+                        turo_id=tr.turo_id
+                    )
+                    dates_booked[date_key] = d
+
+        return dates_booked
 
     def turo_car_id(self):
         if not self.turo_url:
@@ -399,14 +408,14 @@ class Car(base):
     def is_active(self):
         return self.status == 1
 
-    # @staticmethod
-    # def fix_prices():
-    #     cars = Car.query.all()
-    #     for c in cars:
-    #         price = CarPriceHistory.latest_price(c.id)
-    #         if price > 0:
-    #             c.price_day = price
-    #         session.commit()
+    @staticmethod
+    def fix_prices():
+        cars = Car.query.all()
+        for c in cars:
+            price = CarPriceHistory.latest_price(c.id)
+            if price > 0:
+                c.price_day = price
+            session.commit()
 
     @staticmethod
     def count_state(status_list, platform=None, location=None):
@@ -663,34 +672,34 @@ class Car(base):
         mon_str = next_date.strftime("%b")
         return "{} {}".format(self.cohost_payout_day, mon_str)
 
-    # def transactions(self):
-    #     # return Transaction.query.filter_by(car_id=self.id).order_by(Transaction.tx_date.desc()).all()
-    #     return Transaction.get_car_txs(self.id)
+    def transactions(self):
+        # return Transaction.query.filter_by(car_id=self.id).order_by(Transaction.tx_date.desc()).all()
+        return Transaction.get_car_txs(self.id)
 
-    # def upcoming_transactions(self):
-    #     txs_upcoming, txs_upcoming_total = Transaction.get_upcoming(car_id=self.id)
-    #     return txs_upcoming, txs_upcoming_total
+    def upcoming_transactions(self):
+        txs_upcoming, txs_upcoming_total = Transaction.get_upcoming(car_id=self.id)
+        return txs_upcoming, txs_upcoming_total
 
     # DEPRECATED
-    # def total_earnings(self):
-    #     q = Transaction.query.with_entities(func.sum(Transaction.amount).label('total')).filter_by(
-    #         car_id=self.id,
-    #         direction="IN",
-    #         is_deleted=False
-    #     ).all()
-    #     if len(q[0]) == 0:
-    #         return 0
-    #     if not q[0][0]:
-    #         return 0
-    #     return int(q[0][0])
-    #
-    #     # TODO move to query with sum
-    #     txs = Transaction.query.filter_by(car_id=self.id, direction="IN", is_deleted=False).all()
-    #     # txs_out = Transaction.query.filter_by(car_id=self.id, direction="OUT").all()
-    #     total_in = 0
-    #     for t in txs:
-    #         total_in += t.amount
-    #     return total_in
+    def total_earnings(self):
+        q = Transaction.query.with_entities(func.sum(Transaction.amount).label('total')).filter_by(
+            car_id=self.id,
+            direction="IN",
+            is_deleted=False
+        ).all()
+        if len(q[0]) == 0:
+            return 0
+        if not q[0][0]:
+            return 0
+        return int(q[0][0])
+
+        # TODO move to query with sum
+        txs = Transaction.query.filter_by(car_id=self.id, direction="IN", is_deleted=False).all()
+        # txs_out = Transaction.query.filter_by(car_id=self.id, direction="OUT").all()
+        total_in = 0
+        for t in txs:
+            total_in += t.amount
+        return total_in
 
     def monthly_payment(self):
         if self.ownership == CAR_OWNER_UNDEFINED:
@@ -1011,39 +1020,40 @@ class CarOwner(base):
         # demo_car = Car.query.filter_by(id=18).first()
         # return demo_car.earn_all_time()
 
-    # def dash_total_paid(self):
-    #     """
-    #     summ amount of all the transactions with owners cars
-    #     """
-    #
-    #     cars_list_ids = self.list_cars_ids()
-    #     #TODO refactor tx to signed int
-    #     total_income = 0
-    #     q = Transaction.query.with_entities(func.sum(Transaction.amount).label('total')).filter(
-    #         Transaction.car_id.in_(cars_list_ids),
-    #         Transaction.direction == "IN",
-    #         Transaction.is_deleted == False
-    #     ).all()
-    #     res = q[0][0]
-    #     if not res:
-    #         total_income = 0
-    #     else:
-    #         total_income = int(res)
-    #
-    #     # spendings
-    #     total_spent = 0
-    #     q2 = Transaction.query.with_entities(func.sum(Transaction.amount).label('total')).filter(
-    #         Transaction.car_id.in_(cars_list_ids),
-    #         Transaction.direction == "OUT",
-    #         Transaction.is_deleted == False,
-    #     ).all()
-    #     res = q2[0][0]
-    #     if not res:
-    #         total_spent = 0
-    #     else:
-    #         total_spent = int(res)
-    #     total_balance = total_income - total_spent
-    #     return total_balance
+    def dash_total_paid(self):
+        """
+        summ amount of all the transactions with owners cars
+        """
+
+        cars_list_ids = self.list_cars_ids()
+        #TODO refactor tx to signed int
+        total_income = 0
+        q = Transaction.query.with_entities(func.sum(Transaction.amount).label('total')).filter(
+            Transaction.car_id.in_(cars_list_ids),
+            Transaction.direction == "IN",
+            Transaction.is_deleted == False
+        ).all()
+        res = q[0][0]
+        if not res:
+            total_income = 0
+        else:
+            total_income = int(res)
+
+        # spendings
+        total_spent = 0
+        q2 = Transaction.query.with_entities(func.sum(Transaction.amount).label('total')).filter(
+            Transaction.car_id.in_(cars_list_ids),
+            Transaction.direction == "OUT",
+            Transaction.is_deleted == False,
+        ).all()
+        res = q2[0][0]
+        if not res:
+            total_spent = 0
+        else:
+            total_spent = int(res)
+        total_balance = total_income - total_spent
+        return total_balance
+
 
     def earn_this_month(self):
         cars = self.list_cars()
@@ -1067,34 +1077,34 @@ class CarOwner(base):
             total += car.monthly_payment()
         return total
 
-    # def total_this_mon(self):
-    #     # current_mon
-    #     # TODO fix hack
-    #     cars_ids = self.list_cars_ids()
-    #     cars = Transaction.query.filter(Transaction.car_id.in_(cars_ids)).filter(
-    #         Transaction.created > "2022-01-31",
-    #         Transaction.created < "2022-03-01"
-    #     ).all()
-    #     totals = 0
-    #     for c in cars:
-    #         totals += int(c.amount)
-    #     return totals
+    def total_this_mon(self):
+        # current_mon
+        # TODO fix hack
+        cars_ids = self.list_cars_ids()
+        cars = Transaction.query.filter(Transaction.car_id.in_(cars_ids)).filter(
+            Transaction.created > "2022-01-31",
+            Transaction.created < "2022-03-01"
+        ).all()
+        totals = 0
+        for c in cars:
+            totals += int(c.amount)
+        return totals
 
-    # def cnt_transactions(self):
-    #     cars_ids = self.list_cars_ids()
-    #     return Transaction.query.filter(Transaction.car_id.in_(cars_ids)).count()
+    def cnt_transactions(self):
+        cars_ids = self.list_cars_ids()
+        return Transaction.query.filter(Transaction.car_id.in_(cars_ids)).count()
 
-    # def list_transactions(self):
-    #     cars_ids = self.list_cars_ids()
-    #     return Transaction.query.filter(
-    #         Transaction.car_id.in_(cars_ids),
-    #         Transaction.is_deleted == False,
-    #         Transaction.is_visible == True
-    #     ).order_by(Transaction.tx_date.desc()).all()
+    def list_transactions(self):
+        cars_ids = self.list_cars_ids()
+        return Transaction.query.filter(
+            Transaction.car_id.in_(cars_ids),
+            Transaction.is_deleted == False,
+            Transaction.is_visible == True
+        ).order_by(Transaction.tx_date.desc()).all()
 
-    # def upcoming_transactions(self):
-    #     txs_upcoming, txs_upcoming_total = Transaction.get_upcoming(owner_id=self.id)
-    #     return txs_upcoming, txs_upcoming_total
+    def upcoming_transactions(self):
+        txs_upcoming, txs_upcoming_total = Transaction.get_upcoming(owner_id=self.id)
+        return txs_upcoming, txs_upcoming_total
 
     # def token_regenerate(self):
     #     try:
