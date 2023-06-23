@@ -13,7 +13,8 @@ class CarEventType(enum.Enum):
     damage = "damage"
     odometer = "odometer"
     fuel = "fuel"
-
+    checkin = "check in"
+    checkout = "check out"
 
 class CarEvent(db.Model):
     """
