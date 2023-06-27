@@ -50,23 +50,3 @@ class CarDamage(base):
     manager = relationship('Manager')
     comment = Column(Text, nullable=True)
     claim_id = Column(Integer, nullable=True)
-
-    @property
-    def car_name_plate(self):
-        return self.car.car_name_plate()
-
-    # @property
-    # def photos_count(self):
-    #     return CarEventFile.query.filter_by(
-    #         event_type=CarEventType.damage,
-    #         event_id=self.id,
-    #         is_active=True
-    #     ).count()
-
-    # @property
-    # def get_photos(self):
-    #     return CarEventFile.query.filter_by(
-    #         event_type=CarEventType.damage,
-    #         event_id=self.id,
-    #         is_active=True
-    #     ).all()
