@@ -118,11 +118,11 @@ class TuroReservation(base):
     def get_turo_reservations_select():
         return TuroReservation.query.order_by(TuroReservation.id.desc()).all()
 
-    def receipts(self):
-        return TuroReceipt.query\
-            .filter_by(reservation_id=self.turo_id)\
-            .order_by(TuroReceipt.receipt_type.desc())\
-            .all()
+    # def receipts(self):
+    #     return TuroReceipt.query\
+    #         .filter_by(reservation_id=self.turo_id)\
+    #         .order_by(TuroReceipt.receipt_type.desc())\
+    #         .all()
 
     def receipts_you_earned_usd(self):
         receipt = TuroReceipt.query.filter(

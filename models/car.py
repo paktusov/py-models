@@ -478,23 +478,23 @@ class Car(base):
             data_sorted.append(data_dict[k])
         return data_sorted
 
-    @staticmethod
-    def get_cars_select(state="active"):
-        if state == "all":
-            return Car.query.filter(Car.status != 10).order_by(Car.updated.desc()).all()
-        elif state == "active":
-            return Car.query.join(CarModel).join(CarMake).filter(Car.status == 1).order_by(
-                CarMake.name,
-                CarModel.name,
-                Car.year,
-                Car.plate
-            ).all()
-        elif state == "pending":
-            return Car.query.filter(Car.status == 0).order_by(Car.updated.desc()).all()
-        elif state == "inactive":
-            return Car.query.filter(Car.status == 2).order_by(Car.updated.desc()).all()
-        elif state == "deleted":
-            return Car.query.filter(Car.status == 10).order_by(Car.updated.desc()).all()
+    # @staticmethod
+    # def get_cars_select(state="active"):
+    #     if state == "all":
+    #         return Car.query.filter(Car.status != 10).order_by(Car.updated.desc()).all()
+    #     elif state == "active":
+    #         return Car.query.join(CarModel).join(CarMake).filter(Car.status == 1).order_by(
+    #             CarMake.name,
+    #             CarModel.name,
+    #             Car.year,
+    #             Car.plate
+    #         ).all()
+    #     elif state == "pending":
+    #         return Car.query.filter(Car.status == 0).order_by(Car.updated.desc()).all()
+    #     elif state == "inactive":
+    #         return Car.query.filter(Car.status == 2).order_by(Car.updated.desc()).all()
+    #     elif state == "deleted":
+    #         return Car.query.filter(Car.status == 10).order_by(Car.updated.desc()).all()
 
     @staticmethod
     def get_cars_active(owner_id=None):

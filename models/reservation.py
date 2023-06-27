@@ -236,6 +236,4 @@ class Reservation(base):
         information = f"#{self.uuid[-4:]} Car: {self.car.car_name_plate()}"
         if self.user and self.user.name:
             information += f" Client: {self.user.name}"
-        elif self.driver and self.driver.name:
-            information += f" Client: {self.driver.name}"
         return information
