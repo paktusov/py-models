@@ -233,7 +233,7 @@ class Reservation(base):
 
     @cached_property
     def information(self):
-        information = f"#{self.uuid[-4:]} Car: {self.car.car_name_plate()}"
+        information = f"#{self.uuid[:4]} Car: {self.car.car_name_plate()}"
         if self.user and self.user.name:
             information += f" Client: {self.user.name}"
         return information
