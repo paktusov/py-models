@@ -45,7 +45,7 @@ class Reservation(base):
     driver_id = Column(Integer, ForeignKey('drivers.id'), nullable=False)
     # driver = relationship('Driver')
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    # user = relationship('User')
+    user = relationship('User')
     car_id = Column(Integer, ForeignKey('cars.id'), nullable=False)
     car = relationship('Car')
     date_checkin = Column(DateTime, nullable=False)
