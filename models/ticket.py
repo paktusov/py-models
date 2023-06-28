@@ -57,7 +57,7 @@ class CarTicket(base):
     manager_id = Column(Integer, ForeignKey('managers.id'), nullable=True)
     manager = relationship('Manager')
     reservation_type = Column(Text, nullable=True)
-    reservation_id = Column(Integer, nullable=True)
+    reservation_id = Column(String(128), nullable=True)
     amount_paid = Column(Integer, nullable=True)
     amount_refunded = Column(Integer, nullable=True)
     violation_date = Column(DateTime, nullable=True)
