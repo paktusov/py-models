@@ -51,3 +51,41 @@ class CohostAppointment(base):
 
     def get_url(self, url):
         return f'{url}/appointment/{self.id}'
+
+
+class CohostV2Status(enum.Enum):
+    new = 'new'
+    confirmed = 'confirmed'
+    cancelled = 'cancelled'
+    expired = 'expired'
+    complete = 'complete'
+
+
+class CohostV2Type(enum.Enum):
+    appointment = 'appointment'
+    call = 'call'
+
+
+class CohostV2Location(enum.Enum):
+    la = 'la'
+    miami = 'miami'
+
+
+class CohostAppointmentV2(base):
+    __tablename__ = "cohost_appointments_v2"
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(64), nullable=False)
+    created = Column(DateTime, nullable=False)
+    updated = Column(DateTime, nullable=False)
+    status = Column(Enum(CohostV2Status), nullable=False)
+    name = Column(String(255), nullable=False)
+    scheduled_date = Column(DateTime, nullable=False)
+    type = Column(Enum(CohostV2Type), nullable=False)
+    location = Column(Enum(CohostV2Location), nullable=False)
+    notes = Column(Text)
+    car_details = Column(String(255), nullable=False)
+    car_make_id = Column(Integer)
+    car_model_id = Column(Integer)
+    car_year = Column(String(4))
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user = relationship('User')
