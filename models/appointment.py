@@ -87,5 +87,5 @@ class CohostAppointmentV2(base):
     car_make_id = Column(Integer)
     car_model_id = Column(Integer)
     car_year = Column(String(4))
-    user_id = Column(Integer, ForeignKey('user.id'))
+    user_id = Column(Integer, ForeignKey('users.id'))
     user = relationship('User')
