@@ -80,6 +80,7 @@ class CohostAppointmentV2(base):
     status = Column(Enum(CohostV2Status), nullable=False)
     name = Column(String(255), nullable=False)
     scheduled_date = Column(DateTime, nullable=False)
+    event_time = synonym("scheduled_date")
     type = Column(Enum(CohostV2Type), nullable=False)
     location = Column(Enum(CohostV2Location), nullable=False)
     notes = Column(Text)
